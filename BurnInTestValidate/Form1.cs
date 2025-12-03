@@ -660,6 +660,7 @@ cf.ByControlType(ControlType.Window)
 
                                     if(!eStatus)
                                     {
+                                        Log(log, "E: Drive found.");
                                         appnew.Close(true);
                                         return;
                                     }
