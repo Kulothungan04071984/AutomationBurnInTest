@@ -181,6 +181,9 @@ exit";
                     // --- Now simple if/else (no tuples!) ---
                     if (!diskExists)
                     {
+                        if (driveLetter == 'E')
+                            PartitionCount = 1;
+
                         Log(log, "No more disks found.\r\n", Color.Orange);
                         break;
                     }
@@ -218,7 +221,7 @@ exit";
         {
             Log(log, "Starting automation...");
             Log(log, "Disk Partition Start");
-
+            bool eStatus = false;
             //Testing
             var status = await DiskPartitionDynamic_NoWMI(log);
             if (status == "false") return;
@@ -255,7 +258,7 @@ exit";
                     Thread.Sleep(2000);
                     Log(log, "Start Crystal DiskMark");
                     //===========================================
-
+                    writeErrorMessage("Message","Start Crystal DiskMark");
 
                     var Crystalpath = ConfigurationManager.AppSettings["Crystal"];
                     if (!File.Exists(Crystalpath))
@@ -315,6 +318,8 @@ cf.ByControlType(ControlType.Window)
                         }
                         if (combo.Items.Length >= 3)
                             PartitionCount = 1;
+
+                        Log(log,"Partition Count - " +PartitionCount.ToString());
                     }
                     else
                     {
@@ -330,6 +335,14 @@ cf.ByControlType(ControlType.Window)
                     combo?.Collapse();
 
                     //All Ok Button
+
+                    if (combo.Name.Contains("C:"))
+                    {
+                        Log(log, "D: Drive Not showing in crystal report.");
+                        writeErrorMessage("Error", "D: Drive Issue");
+                        return;
+                    }
+                    
                     var btnAll = mainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
                     if (btnAll == null)
                     {
@@ -339,6 +352,7 @@ cf.ByControlType(ControlType.Window)
                     btnAll.Invoke();
 
                     Log(log, "D: crystal Report Started.");
+                    writeErrorMessage("Message", "D: crystal Report Started");
 
                     Application appnew = null;
 
@@ -380,10 +394,11 @@ cf.ByControlType(ControlType.Window)
 
                         //Log(log,"Second list --" + combo1.Items.Count().ToString());
                         Thread.Sleep(300);
+                        writeErrorMessage("Message", "E: crystal Report ");
                         // 🔹 List all dropdown values
                         if (combo1?.Items != null && combo1.Items.Length > 0)
                         {
-                            bool eStatus = false;
+                           
                             foreach (var item in combo1.Items)
                             {
                                 Log(log, "Available Items:" + item.Name);
@@ -393,17 +408,20 @@ cf.ByControlType(ControlType.Window)
                                     combo1.Select(item.Name);
                                     Log(log, "  • " + item.Text);
                                     eStatus = true;
+                                    writeErrorMessage("Message", "E: crystal Report Found ");
                                     break;
                                 }
+
                             }
 
                             if (!eStatus)
                             {
                                 Log(log, "E: Drive not found.");
+                                writeErrorMessage("Error", "E: Drive not found ");
                                 appnew.Close(true);
-                              
+
                             }
-                            else if(eStatus)
+                            else if (eStatus)
                             {
                                 if (combo1?.SelectedItem != null)
                                     Log(log, $"Selected: {combo1.SelectedItem.Text}");
@@ -424,11 +442,12 @@ cf.ByControlType(ControlType.Window)
                                 }
                                 btnAll_1.Invoke();
                                 Log(log, "All Button clicked");
+                                writeErrorMessage("Message", "E: crystal Report Started ");
                                 //if (combo1.Items.Length > 4)
                                 //    PartitionCount = 2;
                             }
 
-                           
+
                         }
                         else
                         {
@@ -436,7 +455,7 @@ cf.ByControlType(ControlType.Window)
                         }
 
                         // 🔹 Show currently selected item
-                 
+
 
                         writeErrorMessage("Crystal Disk Test completed Successfully", "Message");
 
@@ -449,7 +468,7 @@ cf.ByControlType(ControlType.Window)
                         writeErrorMessage("Burn In Test Run Started", "Message");
                         Log(log, "Burn In Test Run Started");
                         app = LaunchWithAdmin(exePath);
-                       // Log(log, "Burn In Test Run Exe Launched");
+                        // Log(log, "Burn In Test Run Exe Launched");
                         Thread.Sleep(7000);
 
                         var mainWindow = desktop.FindFirstDescendant(cf =>
@@ -832,38 +851,54 @@ cf.ByControlType(ControlType.Window)
 
                                 Log(log, "Task Completed");
 
-                             
 
-                               // Thread.Sleep(100000);
-                                var ftxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
-                                if (ftxt_1 != null)
+                                if (eStatus)
                                 {
-                                    var fval_1 = ftxt_1.ToString().Split('.');
-                                    if (fval_1.Length > 0)
+                                    // Thread.Sleep(100000);
+                                    var ftxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
+                                    if (ftxt_1 != null)
                                     {
-                                        if (fval_1[0].Length > 3)
-                                            Log(log, "Crystal DiskMark Pass -Read");
-                                        else
-                                            Log(log, "Crystal DiskMark Fail - Read");
+                                        var fval_1 = ftxt_1.ToString().Split('.');
+                                        if (fval_1.Length > 0)
+                                        {
+                                            if (fval_1[0].Length > 3)
+                                            {
+                                                Log(log, "Crystal DiskMark Pass -Read");
+                                                MessageBox.Show("Crystal DiskMark Pass -Read", "Message");
+                                            }
+                                            else
+                                            {
+                                                Log(log, "Crystal DiskMark Fail - Read");
+                                                MessageBox.Show(" E :Crystal DiskMark Fail - Read", "Error");
+                                                writeErrorMessage("E :Crystal DiskMark Fail - Read", "Error");
+                                            }
+                                        }
+
                                     }
+                                    Log(log, "First Text Box-" + ftxt_1.Name);
 
-                                }
-                                Log(log, "First Text Box-" + ftxt_1.Name);
-
-                                var Stxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
-                                if (Stxt_1 != null)
-                                {
-                                    var Sval_1 = Stxt_1.ToString().Split('.');
-                                    if (Sval_1.Length > 0)
+                                    var Stxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
+                                    if (Stxt_1 != null)
                                     {
-                                        if (Sval_1[0].Length > 3)
-                                            Log(log, "Crystal DiskMark Pass -write");
-                                        else
-                                            Log(log, "Crystal DiskMark Fail - write");
-                                    }
+                                        var Sval_1 = Stxt_1.ToString().Split('.');
+                                        if (Sval_1.Length > 0)
+                                        {
+                                            if (Sval_1[0].Length > 3)
+                                            {
+                                                Log(log, "Crystal DiskMark Pass -write");
+                                                MessageBox.Show("Crystal DiskMark Pass -write", "Message");
+                                            }
+                                            else
+                                            {
+                                                Log(log, "Crystal DiskMark Fail - write");
+                                                MessageBox.Show("E:Crystal DiskMark Fail - write", "Error");
+                                                writeErrorMessage("E :Crystal DiskMark Fail - write", "Error");
+                                            }
+                                        }
 
+                                    }
+                                    Log(log, "Second Text Box-" + Stxt_1.Name);
                                 }
-                                Log(log, "Second Text Box-" + Stxt_1.Name);
 
                                 //first Crystal Report stage
 
@@ -874,9 +909,16 @@ cf.ByControlType(ControlType.Window)
                                     if (fval.Length > 0)
                                     {
                                         if (fval[0].Length > 3)
+                                        {
                                             Log(log, "Crystal DiskMark Pass -Read");
+                                            MessageBox.Show("Crystal DiskMark Pass -Read", "Message");
+                                        }
                                         else
+                                        {
                                             Log(log, "Crystal DiskMark Fail - Read");
+                                            MessageBox.Show("D:Crystal DiskMark Fail - Read", "Error");
+                                            writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
+                                        }
                                     }
 
                                 }
@@ -889,9 +931,17 @@ cf.ByControlType(ControlType.Window)
                                     if (Sval.Length > 0)
                                     {
                                         if (Sval[0].Length > 3)
+                                        {
                                             Log(log, "Crystal DiskMark Pass -write");
+                                            MessageBox.Show("Crystal DiskMark Pass -write", "Message");
+                                        }
                                         else
+                                        {
                                             Log(log, "Crystal DiskMark Fail - write");
+                                            MessageBox.Show("D:Crystal DiskMark Fail - write", "Error");
+                                            writeErrorMessage("D :Crystal DiskMark Fail - write", "Error");
+
+                                        }
                                     }
 
                                 }
@@ -1153,8 +1203,8 @@ cf.ByControlType(ControlType.Window)
                             }
                         }
 
-
                     }
+                    
                 }
                
             }
