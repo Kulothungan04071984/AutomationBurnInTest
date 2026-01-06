@@ -398,7 +398,7 @@ cf.ByControlType(ControlType.Window)
                         // 🔹 List all dropdown values
                         if (combo1?.Items != null && combo1.Items.Length > 0)
                         {
-                           
+
                             foreach (var item in combo1.Items)
                             {
                                 Log(log, "Available Items:" + item.Name);
@@ -457,12 +457,57 @@ cf.ByControlType(ControlType.Window)
                         // 🔹 Show currently selected item
 
 
+
+                        Thread.Sleep(100000);
+
+                        var cryCheck = mainWindowCrystal
+    .FindFirstDescendant(cf => cf.ByName("Stop"))
+    ?.AsButton();
+
+                        if (cryCheck != null)
+                        {
+                            do
+                            {
+                                Thread.Sleep(1000);
+                                Log(log, " D:Waiting for Crystal Test to complete... --" + cryCheck.Name);
+                            } while (cryCheck.Name != "All");
+                        }
+                        Log(log, " D:Crystal Test to completed");
+                        if (eStatus)
+                        {
+                            var ecryCheck = mainWindowCrystal
+    .FindFirstDescendant(cf => cf.ByName("Stop"))
+    ?.AsButton();
+
+                            if (ecryCheck != null)
+                            {
+                                do
+                                {
+                                    Thread.Sleep(1000);
+                                    Log(log, "E:Waiting for Crystal Test to complete... --" + ecryCheck.Name);
+                                } while (ecryCheck.Name != "All");
+                            }
+                            Log(log, " E:Crystal Test to completed");
+
+                        }
+
+                        //this.Invoke(new Action(() =>
+                        //{
+                        //    MessageBox.Show(
+                        //        this,
+                        //        "Process finished",
+                        //        "Done",
+                        //        MessageBoxButtons.OK,
+                        //        MessageBoxIcon.Information
+                        //    );
+                        //}));
                         writeErrorMessage("Crystal Disk Test completed Successfully", "Message");
 
 
+                         //return; //Testing
 
 
-                        Thread.Sleep(1000);
+
 
                         //==============================
                         writeErrorMessage("Burn In Test Run Started", "Message");
