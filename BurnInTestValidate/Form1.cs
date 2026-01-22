@@ -1,5 +1,6 @@
 ﻿using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
+using FlaUI.Core.Conditions;
 using FlaUI.Core.Definitions;
 using FlaUI.Core.Input;
 using FlaUI.Core.WindowsAPI;
@@ -14,19 +15,19 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Management;
 using System.Net.Http;
 using System.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Ink;
 using System.Xml.Linq;
 using Application = FlaUI.Core.Application;
 using Menu = FlaUI.Core.AutomationElements.Menu;
 using MenuItem = FlaUI.Core.AutomationElements.MenuItem;
-using System.Management;
-using FlaUI.Core.Conditions;
 
 
 namespace BurnInTestValidate
@@ -35,11 +36,14 @@ namespace BurnInTestValidate
     {
         string exePath = string.Empty;
         int PartitionCount = 0;
+        popupform ppfrm = new popupform();
+        //  Autopopclose appfrm = new Autopopclose();
+       // BlinkPopupForm popup = new BlinkPopupForm(6000);
         public FrmBurnIntest()
         {
             InitializeComponent();
             SetupUI();
-
+            
         }
 
 
@@ -93,12 +97,12 @@ namespace BurnInTestValidate
                 btn.Enabled = true;
             }
         }
-        static string Safe(string s)
-        {
-            if (string.IsNullOrWhiteSpace(s))
-                return "(empty)";
-            return s;
-        }
+        //static string Safe(string s)
+        //{
+        //    if (string.IsNullOrWhiteSpace(s))
+        //        return "(empty)";
+        //    return s;
+        //}
 
    
 
@@ -111,8 +115,8 @@ namespace BurnInTestValidate
                 char driveLetter = 'D';
                 int diskIndex = 1;
 
-                while (driveLetter <= 'Z')
-                {
+                //while (driveLetter <= 'Z')
+                //{
                     string scriptPath = Path.Combine(Path.GetTempPath(), $"diskpart_auto_{diskIndex}.txt");
 
                     string script = $@"select disk {diskIndex}
@@ -176,17 +180,19 @@ exit";
                              fullOutput.Contains("assigned the drive letter"))
                     {
                         success = true;
-                    }
+                   
+                }
 
+                    //Testing
                     // --- Now simple if/else (no tuples!) ---
-                    if (!diskExists)
-                    {
-                        if (driveLetter == 'E')
-                            PartitionCount = 1;
+                    //if (!diskExists)
+                    //{
+                    //    if (driveLetter == 'E')
+                    //        PartitionCount = 1;
 
-                        Log(log, "No more disks found.\r\n", Color.Orange);
-                        break;
-                    }
+                    //    Log(log, "No more disks found.\r\n", Color.Orange);
+                    //    //break;
+                    //}
 
                     if (success)
                     {
@@ -203,7 +209,7 @@ exit";
                     }
 
                     await Task.Delay(3000); // Let disk settle
-                }
+             //   }
 
                 Log(log, $"Finished. Last assigned letter: {(char)(driveLetter - 1)}:\r\n", Color.Cyan);
                 Log(log,"Disk partitioning completed!Success",System.Drawing.Color.Green);
@@ -221,7 +227,7 @@ exit";
         {
             Log(log, "Starting automation...");
             Log(log, "Disk Partition Start");
-            bool eStatus = false;
+            // bool eStatus = false;
             //Testing
             var status = await DiskPartitionDynamic_NoWMI(log);
             if (status == "false") return;
@@ -278,6 +284,13 @@ cf.ByControlType(ControlType.Window)
                     {
                         Log(log, "CrystalDiskMark Window Not Found");
                         writeErrorMessage("Error -", "CrystalDiskMark Window Not Found");
+
+                        //popup.SetMessage("CrystalDiskMark Window Not Found!");
+                        //popup.Show();
+                        ppfrm.AddText("ERROR: ", Color.Red, true);
+                        ppfrm.AddText("CrystalDiskMark Window Not Found!", Color.Black);
+                        ppfrm.ShowDialog();
+                        ppfrm.Focus();
                         return;
                     }
                     mainWindowCrystal.Focus();
@@ -336,7 +349,7 @@ cf.ByControlType(ControlType.Window)
 
                     //All Ok Button
 
-                    if (combo.Name.Contains("C:"))
+                    if (combo.SelectedItem.Text.Contains("C:"))
                     {
                         Log(log, "D: Drive Not showing in crystal report.");
                         writeErrorMessage("Error", "D: Drive Issue");
@@ -354,105 +367,108 @@ cf.ByControlType(ControlType.Window)
                     Log(log, "D: crystal Report Started.");
                     writeErrorMessage("Message", "D: crystal Report Started");
 
-                    Application appnew = null;
-
-                    if (PartitionCount > 0)
-                    {
-                        Log(log, "Check Next crystal Report Entry.");
-                        appnew = LaunchWithAdmin(Crystalpath);
-                        string comboAutomationId_1 = "1027";
-                        System.Threading.Thread.Sleep(2000);
-                        var emainWindowCrystal = desktop.FindFirstDescendant(cf =>
-cf.ByControlType(ControlType.Window)
-.And(cf.ByName("CrystalDiskMark 8.0.1 x86 [Admin]")))
-?.AsWindow();
-                        if (emainWindowCrystal == null)
-                        {
-                            Log(log, $"❌ Second window not found.");
-                            return;
-                        }
-                        emainWindowCrystal.Focus();
-
-                        var comboElement_1 = emainWindowCrystal.FindFirstDescendant(cf =>
-                    cf.ByAutomationId(comboAutomationId_1)
-                      .And(cf.ByControlType(ControlType.ComboBox)));
-                        if (comboElement_1 == null)
-                        {
-                            Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId_1}' not found.");
-                            appnew.Close();
-                            return;
-                        }
 
 
-                        var combo1 = comboElement_1.AsComboBox();
+                    //Testing
+                    //Application appnew = null;
 
-                        combo1?.Expand();
-                        //Thread.Sleep(300); // allow items to appear
+                    //if (PartitionCount > 0)
+                    //{
+//                        Log(log, "Check Next crystal Report Entry.");
+//                        appnew = LaunchWithAdmin(Crystalpath);
+//                        string comboAutomationId_1 = "1027";
+//                        System.Threading.Thread.Sleep(2000);
+//                        var emainWindowCrystal = desktop.FindFirstDescendant(cf =>
+//cf.ByControlType(ControlType.Window)
+//.And(cf.ByName("CrystalDiskMark 8.0.1 x86 [Admin]")))
+//?.AsWindow();
+//                        if (emainWindowCrystal == null)
+//                        {
+//                            Log(log, $"❌ Second window not found.");
+//                            return;
+//                        }
+//                        emainWindowCrystal.Focus();
 
-                        //Log(log, $"✅ ComboBox Found: {comboAutomationId_1}");
-                        ////Log(log, "----------------------------------------------------");
-
-                        //Log(log,"Second list --" + combo1.Items.Count().ToString());
-                        Thread.Sleep(300);
-                        writeErrorMessage("Message", "E: crystal Report ");
-                        // 🔹 List all dropdown values
-                        if (combo1?.Items != null && combo1.Items.Length > 0)
-                        {
-
-                            foreach (var item in combo1.Items)
-                            {
-                                Log(log, "Available Items:" + item.Name);
-                                if (item.Name.Contains("E:"))
-                                {
-                                    Log(log, "Found E: Drive ");
-                                    combo1.Select(item.Name);
-                                    Log(log, "  • " + item.Text);
-                                    eStatus = true;
-                                    writeErrorMessage("Message", "E: crystal Report Found ");
-                                    break;
-                                }
-
-                            }
-
-                            if (!eStatus)
-                            {
-                                Log(log, "E: Drive not found.");
-                                writeErrorMessage("Error", "E: Drive not found ");
-                                appnew.Close(true);
-
-                            }
-                            else if (eStatus)
-                            {
-                                if (combo1?.SelectedItem != null)
-                                    Log(log, $"Selected: {combo1.SelectedItem.Text}");
-                                else
-                                    Log(log, "No item currently selected.");
+//                        var comboElement_1 = emainWindowCrystal.FindFirstDescendant(cf =>
+//                    cf.ByAutomationId(comboAutomationId_1)
+//                      .And(cf.ByControlType(ControlType.ComboBox)));
+//                        if (comboElement_1 == null)
+//                        {
+//                            Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId_1}' not found.");
+//                            appnew.Close();
+//                            return;
+//                        }
 
 
-                                combo1?.Collapse();
+//                        var combo1 = comboElement_1.AsComboBox();
 
-                                Log(log, "Collapse");
+//                        combo1?.Expand();
+//                        //Thread.Sleep(300); // allow items to appear
 
-                                //All Ok Button
-                                var btnAll_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
-                                if (btnAll_1 == null)
-                                {
-                                    Log(log, "Button All Not Found");
-                                    return;
-                                }
-                                btnAll_1.Invoke();
-                                Log(log, "All Button clicked");
-                                writeErrorMessage("Message", "E: crystal Report Started ");
-                                //if (combo1.Items.Length > 4)
-                                //    PartitionCount = 2;
-                            }
+//                        //Log(log, $"✅ ComboBox Found: {comboAutomationId_1}");
+//                        ////Log(log, "----------------------------------------------------");
+
+//                        //Log(log,"Second list --" + combo1.Items.Count().ToString());
+//                        Thread.Sleep(300);
+//                        writeErrorMessage("Message", "E: crystal Report ");
+//                        // 🔹 List all dropdown values
+//                        if (combo1?.Items != null && combo1.Items.Length > 0)
+//                        {
+
+//                            foreach (var item in combo1.Items)
+//                            {
+//                                Log(log, "Available Items:" + item.Name);
+//                                if (item.Name.Contains("E:"))
+//                                {
+//                                    Log(log, "Found E: Drive ");
+//                                    combo1.Select(item.Name);
+//                                    Log(log, "  • " + item.Text);
+//                                    eStatus = true;
+//                                    writeErrorMessage("Message", "E: crystal Report Found ");
+//                                    break;
+//                                }
+
+//                            }
+
+//                            if (!eStatus)
+//                            {
+//                                Log(log, "E: Drive not found.");
+//                                writeErrorMessage("Error", "E: Drive not found ");
+//                                appnew.Close(true);
+
+//                            }
+//                            else if (eStatus)
+//                            {
+//                                if (combo1?.SelectedItem != null)
+//                                    Log(log, $"Selected: {combo1.SelectedItem.Text}");
+//                                else
+//                                    Log(log, "No item currently selected.");
 
 
-                        }
-                        else
-                        {
-                            Log(log, "⚠️ No items found or combo not expandable.");
-                        }
+//                                combo1?.Collapse();
+
+//                                Log(log, "Collapse");
+
+//                                //All Ok Button
+//                                var btnAll_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
+//                                if (btnAll_1 == null)
+//                                {
+//                                    Log(log, "Button All Not Found");
+//                                    return;
+//                                }
+//                                btnAll_1.Invoke();
+//                                Log(log, "All Button clicked");
+//                                writeErrorMessage("Message", "E: crystal Report Started ");
+//                                //if (combo1.Items.Length > 4)
+//                                //    PartitionCount = 2;
+//                            }
+
+
+                        //}
+                        //else
+                        //{
+                        //    Log(log, "⚠️ No items found or combo not expandable.");
+                        //}
 
                         // 🔹 Show currently selected item
 
@@ -469,39 +485,152 @@ cf.ByControlType(ControlType.Window)
                             do
                             {
                                 Thread.Sleep(1000);
-                                Log(log, " D:Waiting for Crystal Test to complete... --" + cryCheck.Name);
+                               // Log(log, " D:Waiting for Crystal Test to complete... --" + cryCheck.Name);
                             } while (cryCheck.Name != "All");
                         }
                         Log(log, " D:Crystal Test to completed");
-                        if (eStatus)
+                    var elements = mainWindowCrystal.FindAllDescendants();
+                    int count = 0;
+                    foreach (var el in elements)
+                    {
+                        string name = SafeGet(() => el.Name);
+                        string automationId = SafeGet(() => el.AutomationId);
+                        string controlType = SafeGet(() => el.ControlType.ToString());
+
+
+                        if (automationId.ToString() == "1009" || automationId.ToString() == "1010" || automationId.ToString() == "1011" || automationId.ToString() == "1012" || automationId.ToString() == "1014" || automationId.ToString() == "1015" || automationId.ToString() == "1016" || automationId.ToString() == "1017")
                         {
-                            var ecryCheck = mainWindowCrystal
-    .FindFirstDescendant(cf => cf.ByName("Stop"))
-    ?.AsButton();
 
-                            if (ecryCheck != null)
+                            var ftxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId(automationId.ToString()));
+                            string readfinal = getcrystalvalue(ftxt);
+                           if (readfinal.ToString() == "0")
                             {
-                                do
-                                {
-                                    Thread.Sleep(1000);
-                                    Log(log, "E:Waiting for Crystal Test to complete... --" + ecryCheck.Name);
-                                } while (ecryCheck.Name != "All");
+                                Log(log, "Crystal DiskMark Fail " + readfinal);
+                                writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
+                                ppfrm.AddText("ERROR: ", Color.Red, true);
+                                ppfrm.AddText("D:Crystal DiskMark Fail - Read!", Color.Black);
+                                ppfrm.ShowDialog();
+                                ppfrm.Focus();
+                                return;
                             }
-                            Log(log, " E:Crystal Test to completed");
+                            count++;
+                            if (count == 8)
+                            {
+                                if (!(readfinal.ToString() == "0"))
+                                {
+                                    Log(log, "Crystal DiskMark Pass -" + readfinal);
 
+                                    this.BeginInvoke(new Action(() =>
+                                    {
+                                        BlinkPopupForm popup = new BlinkPopupForm(6000);
+                                        popup.SetMessage("Crystal DiskMark Pass -Read");
+                                        popup.Show();
+                                        popup.Activate();
+                                    }));
+                                }
+                                else
+                                    break;
+                            }
+                            Log(log, $"Type: {controlType} | Name: {name} | AutomationId: {automationId}");
+                           
                         }
 
-                        //this.Invoke(new Action(() =>
-                        //{
-                        //    MessageBox.Show(
-                        //        this,
-                        //        "Process finished",
-                        //        "Done",
-                        //        MessageBoxButtons.OK,
-                        //        MessageBoxIcon.Information
-                        //    );
-                        //}));
-                        writeErrorMessage("Crystal Disk Test completed Successfully", "Message");
+                       
+                    }
+
+                    //var Stxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
+                    //if (Stxt != null)
+                    //{
+                    //    var Sval = Stxt.ToString().Split('.');
+                    //    if (Sval.Length > 0)
+                    //    {
+                    //        if (Sval[0].Length < 3 || Sval[0].ToString() == "0")
+                    //        {
+                    //            Log(log, "Crystal DiskMark Fail - write");
+                    //            writeErrorMessage("D :Crystal DiskMark Fail - write", "Error");
+                    //            ppfrm.AddText("ERROR: ", Color.Red, true);
+                    //            ppfrm.AddText("D:Crystal DiskMark Fail - write!", Color.Black);
+                    //            ppfrm.ShowDialog();
+                    //            ppfrm.Focus();
+                    //            //popup.SetMessage("D:Crystal DiskMark Fail - write");
+                    //            //popup.Show();
+                    //            return;
+                    //        }
+                    //        else
+                    //        {
+                    //            var writeval = Sval[0].Split(',');
+                    //            if (writeval.Length > 0)
+                    //            {
+                    //                Log(log, "Write Value Split --" + writeval[1]);
+                    //                var writefinal = writeval[1].ToString();
+                    //                if (!(writefinal.Length < 3 || writefinal.ToString() == "0"))
+                    //                {
+                    //                    Log(log, "Crystal DiskMark Pass -write -" + writefinal);
+                    //                    this.BeginInvoke(new Action(() =>
+                    //                    {
+                    //                        BlinkPopupForm popup = new BlinkPopupForm(6000);
+                    //                        popup.SetMessage("Crystal DiskMark Pass -Write");
+                    //                        popup.Show();
+                    //                        popup.Activate();
+                    //                    }));
+                    //                }
+                    //                else if (writefinal.Length < 3 || writefinal.ToString() == "0")
+                    //                {
+                    //                    Log(log, "Crystal DiskMark Fail - write" + writefinal);
+                    //                    writeErrorMessage("D :Crystal DiskMark Fail - write", "Error");
+                    //                    ppfrm.AddText("ERROR: ", Color.Red, true);
+                    //                    ppfrm.AddText("D:Crystal DiskMark Fail - write!", Color.Black);
+                    //                    ppfrm.ShowDialog();
+                    //                    ppfrm.Focus();
+                    //                    //popup.SetMessage("D:Crystal DiskMark Fail - write");
+                    //                    //popup.Show();
+                    //                    return;
+
+
+
+                    //                }
+                    //            }
+                    //            else
+                    //            {
+                    //                Log(log, "Write Value Split Issue --" + Sval[0]);
+                    //                return;
+                    //            }
+
+                    //        }
+
+                    //    }
+                    //}
+                    //Log(log, "Second Text Box-" + Stxt.Name);
+                    //Testing
+                    //                    if (eStatus)
+                    //                    {
+                    //                        var ecryCheck = mainWindowCrystal
+                    //.FindFirstDescendant(cf => cf.ByName("Stop"))
+                    //?.AsButton();
+
+                    //                        if (ecryCheck != null)
+                    //                        {
+                    //                            do
+                    //                            {
+                    //                                Thread.Sleep(1000);
+                    //                                Log(log, "E:Waiting for Crystal Test to complete... --" + ecryCheck.Name);
+                    //                            } while (ecryCheck.Name != "All");
+                    //                        }
+                    //                        Log(log, " E:Crystal Test to completed");
+
+                    //                    }
+
+                    //this.Invoke(new Action(() =>
+                    //{
+                    //    MessageBox.Show(
+                    //        this,
+                    //        "Process finished",
+                    //        "Done",
+                    //        MessageBoxButtons.OK,
+                    //        MessageBoxIcon.Information
+                    //    );
+                    //}));
+                    writeErrorMessage("Crystal Disk Test completed Successfully", "Message");
 
 
                          //return; //Testing
@@ -520,7 +649,7 @@ cf.ByControlType(ControlType.Window)
                  cf.ByControlType(ControlType.Window)
                    .And(cf.ByName("BurnInTest V8.1 Pro (1006)")))
                  ?.AsWindow();
-
+                    
                         Thread.Sleep(2000);
                         if (mainWindow == null)
                         {
@@ -895,360 +1024,414 @@ cf.ByControlType(ControlType.Window)
 
 
                                 Log(log, "Task Completed");
+                            Thread.Sleep(215000);
+    //                        var windows = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
+
+    //                        foreach (var win in windows)
+    //                        {
+    //                            Log(log, "==================================");
+    //                            Log(log, $"Window Name       : {win.Name}");
+    //                            string automationId = win.Properties.AutomationId.IsSupported
+    //? win.Properties.AutomationId.Value
+    //: "(Not Supported)";
+
+    //                            Log(log, $"AutomationId : {automationId}");
+    //                            // Console.WriteLine($"AutomationId : {win.AutomationId ?? "(Not Available)"}");
+    //                            //Console.WriteLine($"ClassName         : {win.ClassName}");
+    //                            //Console.WriteLine($"ProcessId         : {win.Properties.ProcessId.Value}");
+    //                        }
 
 
-                                if (eStatus)
+    //                        var childWindows = mainWindow.FindAllChildren(cf =>
+    //cf.ByControlType(ControlType.Window));
+
+    //                        foreach (var win in childWindows)
+    //                        {
+    //                            Console.WriteLine("-------- Child Window --------");
+    //                            Log(log, "==================================");
+    //                            Log(log, $"Window Name       : {win.Name}");
+    //                            string automationId = win.Properties.AutomationId.IsSupported
+    //? win.Properties.AutomationId.Value
+    //: "(Not Supported)";
+
+    //                            Log(log, $"AutomationId : {automationId}");
+    //                        }
+
+                            string resultname = string.Empty;
+                            
+                            do
+                            {
+                               var burnintestresult = mainWindow.FindFirstDescendant(cf =>
+        cf.ByControlType(ControlType.Window)
+          .And(cf.ByName("BurnInTest test result")));
+
+                                resultname = burnintestresult == null ? string.Empty : burnintestresult.Name.ToString() ;
+
+                                Thread.Sleep(1000);
+                                string name= burnintestresult == null ? "N/A" : burnintestresult.Name;
+                                Log(log, "Waiting for Burn In Test to complete... " + name);
+
+                            } while (resultname == string.Empty);
+
+                            //Testing
+
+                            //if (eStatus)
+                            //{
+                            //    // Thread.Sleep(100000);
+                            //    var ftxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
+                            //    if (ftxt_1 != null)
+                            //    {
+                            //        var fval_1 = ftxt_1.ToString().Split('.');
+                            //        if (fval_1.Length > 0)
+                            //        {
+                            //            if (fval_1[0].Length > 3)
+                            //            {
+                            //                Log(log, "Crystal DiskMark Pass -Read");
+                            //                MessageBox.Show("Crystal DiskMark Pass -Read", "Message");
+                            //            }
+                            //            else
+                            //            {
+                            //                Log(log, "Crystal DiskMark Fail - Read");
+                            //                MessageBox.Show(" E :Crystal DiskMark Fail - Read", "Error");
+                            //                writeErrorMessage("E :Crystal DiskMark Fail - Read", "Error");
+                            //            }
+                            //        }
+
+                            //    }
+                            //    Log(log, "First Text Box-" + ftxt_1.Name);
+
+                            //    var Stxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
+                            //    if (Stxt_1 != null)
+                            //    {
+                            //        var Sval_1 = Stxt_1.ToString().Split('.');
+                            //        if (Sval_1.Length > 0)
+                            //        {
+                            //            if (Sval_1[0].Length > 3)
+                            //            {
+                            //                Log(log, "Crystal DiskMark Pass -write");
+                            //                MessageBox.Show("Crystal DiskMark Pass -write", "Message");
+                            //            }
+                            //            else
+                            //            {
+                            //                Log(log, "Crystal DiskMark Fail - write");
+                            //                MessageBox.Show("E:Crystal DiskMark Fail - write", "Error");
+                            //                writeErrorMessage("E :Crystal DiskMark Fail - write", "Error");
+                            //            }
+                            //        }
+
+                            //    }
+                            //    Log(log, "Second Text Box-" + Stxt_1.Name);
+                            //}
+
+                            //first Crystal Report stage
+
+
+
+                            //                            var Crystalpath = ConfigurationManager.AppSettings["Crystal"];
+                            //                            if (!File.Exists(Crystalpath))
+                            //                            { 
+                            //                                Log(log, "Crystal DiskMark Not Found");
+                            //                                return;
+                            //                            }
+                            //                            app = LaunchWithAdmin(Crystalpath);
+                            //                            System.Threading.Thread.Sleep(2000);
+
+                            //                            var mainWindowCrystal = desktop.FindFirstDescendant(cf =>
+                            //cf.ByControlType(ControlType.Window)
+                            //.And(cf.ByName("CrystalDiskMark 8.0.1 x86 [Admin]")))
+                            //?.AsWindow();
+
+                            //                            if (mainWindowCrystal == null)
+                            //                            {
+                            //                                Log(log, "CrystalDiskMark Window Not Found");
+                            //                                return;
+                            //                            }
+                            //                            mainWindowCrystal.Focus();
+
+                            //                            //Comobox value
+                            //                            System.Threading.Thread.Sleep(1000);
+                            //                            string comboAutomationId = "1027";
+
+                            //                            var comboElement = mainWindowCrystal.FindFirstDescendant(cf =>
+                            //                        cf.ByAutomationId(comboAutomationId)
+                            //                          .And(cf.ByControlType(ControlType.ComboBox)));
+                            //                            if (comboElement == null)
+                            //                            {
+                            //                                Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId}' not found.");
+                            //                                return;
+                            //                            }
+
+
+                            //                            var combo = comboElement.AsComboBox();
+                            //                            combo?.Expand();
+                            //                            Thread.Sleep(500); // allow items to appear
+
+                            //                            Log(log, $"✅ ComboBox Found: {comboAutomationId}");
+                            //                            Log(log, "----------------------------------------------------");
+
+                            //                            // 🔹 List all dropdown values
+                            //                            if (combo?.Items != null && combo.Items.Length > 0)
+                            //                            {
+                            //                                Log(log, "Available Items:");
+                            //                                foreach (var item in combo.Items)
+                            //                                {
+                            //                                    if (item.Name == "D: 18% (42/232GiB)" || item.Name.Contains("D:"))
+                            //                                    {
+                            //                                        combo.Select(item.Name);
+                            //                                        Log(log, "  • " + item.Text);
+                            //                                        break;
+                            //                                    }
+                            //                                }
+                            //                                if (combo.Items.Length >= 3)
+                            //                                    PartitionCount = 1;
+                            //                            }
+                            //                            else
+                            //                            {
+                            //                                Log(log, "⚠️ No items found or combo not expandable.");
+                            //                            }
+
+                            //                            // 🔹 Show currently selected item
+                            //                            if (combo?.SelectedItem != null)
+                            //                                Log(log, $"Selected: {combo.SelectedItem.Text}");
+                            //                            else
+                            //                                Log(log, "No item currently selected.");
+
+                            //                            combo?.Collapse();
+
+                            //                            //All Ok Button
+                            //                            var btnAll = mainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
+                            //                            if (btnAll == null)
+                            //                            {
+                            //                                Log(log, "Button All Not Found");
+                            //                                return;
+                            //                            }
+                            //                            btnAll.Invoke();
+
+                            //                            Log(log, "D: crystal Report Started.");
+
+                            //                            Application appnew = null;
+
+                            //                            if (PartitionCount > 0 )
+                            //                            {
+                            //                                Log(log, "Check Next crystal Report Entry.");
+                            //                                appnew = LaunchWithAdmin(Crystalpath);
+                            //                                string comboAutomationId_1 = "1027";
+                            //                                System.Threading.Thread.Sleep(2000);
+                            //                                var emainWindowCrystal = desktop.FindFirstDescendant(cf =>
+                            //cf.ByControlType(ControlType.Window)
+                            //.And(cf.ByName("CrystalDiskMark 8.0.1 x86 [Admin]")))
+                            //?.AsWindow();
+                            //                                if (emainWindowCrystal == null)
+                            //                                {
+                            //                                    Log(log, $"❌ Second window not found.");
+                            //                                    return;
+                            //                                }
+                            //                                emainWindowCrystal.Focus();
+
+                            //                                var comboElement_1 = emainWindowCrystal.FindFirstDescendant(cf =>
+                            //                            cf.ByAutomationId(comboAutomationId_1)
+                            //                              .And(cf.ByControlType(ControlType.ComboBox)));
+                            //                                if (comboElement_1 == null)
+                            //                                {
+                            //                                    Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId_1}' not found.");
+                            //                                    appnew.Close();
+                            //                                    return;
+                            //                                }
+
+
+                            //                                var combo1 = comboElement_1.AsComboBox();
+
+                            //                                combo1?.Expand();
+                            //                                //Thread.Sleep(300); // allow items to appear
+
+                            //                                //Log(log, $"✅ ComboBox Found: {comboAutomationId_1}");
+                            //                                ////Log(log, "----------------------------------------------------");
+
+                            //                                //Log(log,"Second list --" + combo1.Items.Count().ToString());
+                            //                                Thread.Sleep(300);
+                            //                                // 🔹 List all dropdown values
+                            //                                if (combo1?.Items != null && combo1.Items.Length > 0)
+                            //                                {
+                            //                                    bool eStatus = false;
+                            //                                    foreach (var item in combo1.Items)
+                            //                                    {
+                            //                                        Log(log, "Available Items:" + item.Name);
+                            //                                        if (item.Name.Contains("E:"))
+                            //                                        {
+                            //                                            Log(log, "Found E: Drive ");
+                            //                                            combo1.Select(item.Name);
+                            //                                            Log(log, "  • " + item.Text);
+                            //                                            eStatus = true;
+                            //                                            break;
+                            //                                        }
+                            //                                    }
+
+                            //                                    if(!eStatus)
+                            //                                    {
+                            //                                        Log(log, "E: Drive found.");
+                            //                                        appnew.Close(true);
+                            //                                        return;
+                            //                                    }
+
+                            //                                    if (combo1.Items.Length > 4)
+                            //                                        PartitionCount = 2;
+                            //                                }
+                            //                                else
+                            //                                {
+                            //                                    Log(log, "⚠️ No items found or combo not expandable.");
+                            //                                }
+
+                            //                                // 🔹 Show currently selected item
+                            //                                if (combo1?.SelectedItem != null)
+                            //                                    Log(log, $"Selected: {combo1.SelectedItem.Text}");
+                            //                                else
+                            //                                    Log(log, "No item currently selected.");
+
+
+                            //                                combo1?.Collapse();
+
+
+
+                            //                                //All Ok Button
+                            //                                var btnAll_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
+                            //                                if (btnAll_1 == null)
+                            //                                {
+                            //                                    Log(log, "Button All Not Found");
+                            //                                    return;
+                            //                                }
+                            //                                btnAll_1.Invoke();
+
+                            //                                Thread.Sleep(100000);
+                            //                                var ftxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
+                            //                                if (ftxt_1 != null)
+                            //                                {
+                            //                                    var fval_1 = ftxt_1.ToString().Split('.');
+                            //                                    if (fval_1.Length > 0)
+                            //                                    {
+                            //                                        if (fval_1[0].Length > 3)
+                            //                                            Log(log, "Crystal DiskMark Pass -Read");
+                            //                                        else
+                            //                                            Log(log, "Crystal DiskMark Fail - Read");
+                            //                                    }
+
+                            //                                }
+                            //                                Log(log, "First Text Box-" + ftxt_1.Name);
+
+                            //                                var Stxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
+                            //                                if (Stxt_1 != null)
+                            //                                {
+                            //                                    var Sval_1 = Stxt_1.ToString().Split('.');
+                            //                                    if (Sval_1.Length > 0)
+                            //                                    {
+                            //                                        if (Sval_1[0].Length > 3)
+                            //                                            Log(log, "Crystal DiskMark Pass -write");
+                            //                                        else
+                            //                                            Log(log, "Crystal DiskMark Fail - write");
+                            //                                    }
+
+                            //                                }
+                            //                                Log(log, "Second Text Box-" + Stxt_1.Name);
+
+                            //                                //first Crystal Report stage
+
+                            //                                var ftxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
+                            //                                if (ftxt != null)
+                            //                                {
+                            //                                    var fval = ftxt.ToString().Split('.');
+                            //                                    if (fval.Length > 0)
+                            //                                    {
+                            //                                        if (fval[0].Length > 3)
+                            //                                            Log(log, "Crystal DiskMark Pass -Read");
+                            //                                        else
+                            //                                            Log(log, "Crystal DiskMark Fail - Read");
+                            //                                    }
+
+                            //                                }
+                            //                                Log(log, "First Text Box-" + ftxt.Name);
+
+                            //                                var Stxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
+                            //                                if (Stxt != null)
+                            //                                {
+                            //                                    var Sval = Stxt.ToString().Split('.');
+                            //                                    if (Sval.Length > 0)
+                            //                                    {
+                            //                                        if (Sval[0].Length > 3)
+                            //                                            Log(log, "Crystal DiskMark Pass -write");
+                            //                                        else
+                            //                                            Log(log, "Crystal DiskMark Fail - write");
+                            //                                    }
+
+                            //                                }
+                            //                                Log(log, "Second Text Box-" + Stxt.Name);
+
+                            // appnew.Close();
+                            //    }
+
+                            //Testing
+                            //ppfrm.AddText("SUCCESS: ", Color.Green, true);
+                            //ppfrm.AddText("Passmark Test Completed.\n", Color.Black);
+                            //ppfrm.ShowDialog();
+                            //popup.SetMessage("Passmark Test Completed");
+                            //popup.Show();
+                            //popup.Activate();
+                            this.BeginInvoke(new Action(() =>
+                            {
+                                BlinkPopupForm popup = new BlinkPopupForm(6000);
+                                popup.SetMessage("Passmark Test Completed..(Disk Partition , Crystal DiskMark, Burn In Test");
+                                popup.Show();
+                                popup.Activate();
+                            }));
+
+                            if (mainWindowCrystal == null)
+                            {
+                                if (mainWindowCrystal.Patterns.Window.Pattern.WindowVisualState.Value
+     == FlaUI.Core.Definitions.WindowVisualState.Minimized)
                                 {
-                                    // Thread.Sleep(100000);
-                                    var ftxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
-                                    if (ftxt_1 != null)
-                                    {
-                                        var fval_1 = ftxt_1.ToString().Split('.');
-                                        if (fval_1.Length > 0)
-                                        {
-                                            if (fval_1[0].Length > 3)
-                                            {
-                                                Log(log, "Crystal DiskMark Pass -Read");
-                                                MessageBox.Show("Crystal DiskMark Pass -Read", "Message");
-                                            }
-                                            else
-                                            {
-                                                Log(log, "Crystal DiskMark Fail - Read");
-                                                MessageBox.Show(" E :Crystal DiskMark Fail - Read", "Error");
-                                                writeErrorMessage("E :Crystal DiskMark Fail - Read", "Error");
-                                            }
-                                        }
-
-                                    }
-                                    Log(log, "First Text Box-" + ftxt_1.Name);
-
-                                    var Stxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
-                                    if (Stxt_1 != null)
-                                    {
-                                        var Sval_1 = Stxt_1.ToString().Split('.');
-                                        if (Sval_1.Length > 0)
-                                        {
-                                            if (Sval_1[0].Length > 3)
-                                            {
-                                                Log(log, "Crystal DiskMark Pass -write");
-                                                MessageBox.Show("Crystal DiskMark Pass -write", "Message");
-                                            }
-                                            else
-                                            {
-                                                Log(log, "Crystal DiskMark Fail - write");
-                                                MessageBox.Show("E:Crystal DiskMark Fail - write", "Error");
-                                                writeErrorMessage("E :Crystal DiskMark Fail - write", "Error");
-                                            }
-                                        }
-
-                                    }
-                                    Log(log, "Second Text Box-" + Stxt_1.Name);
+                                    mainWindowCrystal.Patterns.Window.Pattern.SetWindowVisualState(
+                                        FlaUI.Core.Definitions.WindowVisualState.Normal);
                                 }
-
-                                //first Crystal Report stage
-
-                                var ftxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
-                                if (ftxt != null)
-                                {
-                                    var fval = ftxt.ToString().Split('.');
-                                    if (fval.Length > 0)
-                                    {
-                                        if (fval[0].Length > 3)
-                                        {
-                                            Log(log, "Crystal DiskMark Pass -Read");
-                                            MessageBox.Show("Crystal DiskMark Pass -Read", "Message");
-                                        }
-                                        else
-                                        {
-                                            Log(log, "Crystal DiskMark Fail - Read");
-                                            MessageBox.Show("D:Crystal DiskMark Fail - Read", "Error");
-                                            writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
-                                        }
-                                    }
-
-                                }
-                                Log(log, "First Text Box-" + ftxt.Name);
-
-                                var Stxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
-                                if (Stxt != null)
-                                {
-                                    var Sval = Stxt.ToString().Split('.');
-                                    if (Sval.Length > 0)
-                                    {
-                                        if (Sval[0].Length > 3)
-                                        {
-                                            Log(log, "Crystal DiskMark Pass -write");
-                                            MessageBox.Show("Crystal DiskMark Pass -write", "Message");
-                                        }
-                                        else
-                                        {
-                                            Log(log, "Crystal DiskMark Fail - write");
-                                            MessageBox.Show("D:Crystal DiskMark Fail - write", "Error");
-                                            writeErrorMessage("D :Crystal DiskMark Fail - write", "Error");
-
-                                        }
-                                    }
-
-                                }
-                                Log(log, "Second Text Box-" + Stxt.Name);
-
-                                //                            var Crystalpath = ConfigurationManager.AppSettings["Crystal"];
-                                //                            if (!File.Exists(Crystalpath))
-                                //                            { 
-                                //                                Log(log, "Crystal DiskMark Not Found");
-                                //                                return;
-                                //                            }
-                                //                            app = LaunchWithAdmin(Crystalpath);
-                                //                            System.Threading.Thread.Sleep(2000);
-
-                                //                            var mainWindowCrystal = desktop.FindFirstDescendant(cf =>
-                                //cf.ByControlType(ControlType.Window)
-                                //.And(cf.ByName("CrystalDiskMark 8.0.1 x86 [Admin]")))
-                                //?.AsWindow();
-
-                                //                            if (mainWindowCrystal == null)
-                                //                            {
-                                //                                Log(log, "CrystalDiskMark Window Not Found");
-                                //                                return;
-                                //                            }
-                                //                            mainWindowCrystal.Focus();
-
-                                //                            //Comobox value
-                                //                            System.Threading.Thread.Sleep(1000);
-                                //                            string comboAutomationId = "1027";
-
-                                //                            var comboElement = mainWindowCrystal.FindFirstDescendant(cf =>
-                                //                        cf.ByAutomationId(comboAutomationId)
-                                //                          .And(cf.ByControlType(ControlType.ComboBox)));
-                                //                            if (comboElement == null)
-                                //                            {
-                                //                                Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId}' not found.");
-                                //                                return;
-                                //                            }
+                                mainWindowCrystal.Close();
+                              //  Log(log, "Crystal DiskMark Closed -- Minimized");
+                            }
+                            else if (mainWindowCrystal != null)
+                            {
+                                mainWindowCrystal.Close();
+                               // Log(log, "Crystal DiskMark Closed -- Minimized");
+                            }
+                            else
+                                Log(log, "Crystal DiskMark - Page not found");
+                            // PartitionCount = 0;
 
 
-                                //                            var combo = comboElement.AsComboBox();
-                                //                            combo?.Expand();
-                                //                            Thread.Sleep(500); // allow items to appear
-
-                                //                            Log(log, $"✅ ComboBox Found: {comboAutomationId}");
-                                //                            Log(log, "----------------------------------------------------");
-
-                                //                            // 🔹 List all dropdown values
-                                //                            if (combo?.Items != null && combo.Items.Length > 0)
-                                //                            {
-                                //                                Log(log, "Available Items:");
-                                //                                foreach (var item in combo.Items)
-                                //                                {
-                                //                                    if (item.Name == "D: 18% (42/232GiB)" || item.Name.Contains("D:"))
-                                //                                    {
-                                //                                        combo.Select(item.Name);
-                                //                                        Log(log, "  • " + item.Text);
-                                //                                        break;
-                                //                                    }
-                                //                                }
-                                //                                if (combo.Items.Length >= 3)
-                                //                                    PartitionCount = 1;
-                                //                            }
-                                //                            else
-                                //                            {
-                                //                                Log(log, "⚠️ No items found or combo not expandable.");
-                                //                            }
-
-                                //                            // 🔹 Show currently selected item
-                                //                            if (combo?.SelectedItem != null)
-                                //                                Log(log, $"Selected: {combo.SelectedItem.Text}");
-                                //                            else
-                                //                                Log(log, "No item currently selected.");
-
-                                //                            combo?.Collapse();
-
-                                //                            //All Ok Button
-                                //                            var btnAll = mainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
-                                //                            if (btnAll == null)
-                                //                            {
-                                //                                Log(log, "Button All Not Found");
-                                //                                return;
-                                //                            }
-                                //                            btnAll.Invoke();
-
-                                //                            Log(log, "D: crystal Report Started.");
-
-                                //                            Application appnew = null;
-
-                                //                            if (PartitionCount > 0 )
-                                //                            {
-                                //                                Log(log, "Check Next crystal Report Entry.");
-                                //                                appnew = LaunchWithAdmin(Crystalpath);
-                                //                                string comboAutomationId_1 = "1027";
-                                //                                System.Threading.Thread.Sleep(2000);
-                                //                                var emainWindowCrystal = desktop.FindFirstDescendant(cf =>
-                                //cf.ByControlType(ControlType.Window)
-                                //.And(cf.ByName("CrystalDiskMark 8.0.1 x86 [Admin]")))
-                                //?.AsWindow();
-                                //                                if (emainWindowCrystal == null)
-                                //                                {
-                                //                                    Log(log, $"❌ Second window not found.");
-                                //                                    return;
-                                //                                }
-                                //                                emainWindowCrystal.Focus();
-
-                                //                                var comboElement_1 = emainWindowCrystal.FindFirstDescendant(cf =>
-                                //                            cf.ByAutomationId(comboAutomationId_1)
-                                //                              .And(cf.ByControlType(ControlType.ComboBox)));
-                                //                                if (comboElement_1 == null)
-                                //                                {
-                                //                                    Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId_1}' not found.");
-                                //                                    appnew.Close();
-                                //                                    return;
-                                //                                }
-
-
-                                //                                var combo1 = comboElement_1.AsComboBox();
-
-                                //                                combo1?.Expand();
-                                //                                //Thread.Sleep(300); // allow items to appear
-
-                                //                                //Log(log, $"✅ ComboBox Found: {comboAutomationId_1}");
-                                //                                ////Log(log, "----------------------------------------------------");
-
-                                //                                //Log(log,"Second list --" + combo1.Items.Count().ToString());
-                                //                                Thread.Sleep(300);
-                                //                                // 🔹 List all dropdown values
-                                //                                if (combo1?.Items != null && combo1.Items.Length > 0)
-                                //                                {
-                                //                                    bool eStatus = false;
-                                //                                    foreach (var item in combo1.Items)
-                                //                                    {
-                                //                                        Log(log, "Available Items:" + item.Name);
-                                //                                        if (item.Name.Contains("E:"))
-                                //                                        {
-                                //                                            Log(log, "Found E: Drive ");
-                                //                                            combo1.Select(item.Name);
-                                //                                            Log(log, "  • " + item.Text);
-                                //                                            eStatus = true;
-                                //                                            break;
-                                //                                        }
-                                //                                    }
-
-                                //                                    if(!eStatus)
-                                //                                    {
-                                //                                        Log(log, "E: Drive found.");
-                                //                                        appnew.Close(true);
-                                //                                        return;
-                                //                                    }
-
-                                //                                    if (combo1.Items.Length > 4)
-                                //                                        PartitionCount = 2;
-                                //                                }
-                                //                                else
-                                //                                {
-                                //                                    Log(log, "⚠️ No items found or combo not expandable.");
-                                //                                }
-
-                                //                                // 🔹 Show currently selected item
-                                //                                if (combo1?.SelectedItem != null)
-                                //                                    Log(log, $"Selected: {combo1.SelectedItem.Text}");
-                                //                                else
-                                //                                    Log(log, "No item currently selected.");
-
-
-                                //                                combo1?.Collapse();
+                            //  app.Close();
+                         
 
 
 
-                                //                                //All Ok Button
-                                //                                var btnAll_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
-                                //                                if (btnAll_1 == null)
-                                //                                {
-                                //                                    Log(log, "Button All Not Found");
-                                //                                    return;
-                                //                                }
-                                //                                btnAll_1.Invoke();
-
-                                //                                Thread.Sleep(100000);
-                                //                                var ftxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
-                                //                                if (ftxt_1 != null)
-                                //                                {
-                                //                                    var fval_1 = ftxt_1.ToString().Split('.');
-                                //                                    if (fval_1.Length > 0)
-                                //                                    {
-                                //                                        if (fval_1[0].Length > 3)
-                                //                                            Log(log, "Crystal DiskMark Pass -Read");
-                                //                                        else
-                                //                                            Log(log, "Crystal DiskMark Fail - Read");
-                                //                                    }
-
-                                //                                }
-                                //                                Log(log, "First Text Box-" + ftxt_1.Name);
-
-                                //                                var Stxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
-                                //                                if (Stxt_1 != null)
-                                //                                {
-                                //                                    var Sval_1 = Stxt_1.ToString().Split('.');
-                                //                                    if (Sval_1.Length > 0)
-                                //                                    {
-                                //                                        if (Sval_1[0].Length > 3)
-                                //                                            Log(log, "Crystal DiskMark Pass -write");
-                                //                                        else
-                                //                                            Log(log, "Crystal DiskMark Fail - write");
-                                //                                    }
-
-                                //                                }
-                                //                                Log(log, "Second Text Box-" + Stxt_1.Name);
-
-                                //                                //first Crystal Report stage
-
-                                //                                var ftxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
-                                //                                if (ftxt != null)
-                                //                                {
-                                //                                    var fval = ftxt.ToString().Split('.');
-                                //                                    if (fval.Length > 0)
-                                //                                    {
-                                //                                        if (fval[0].Length > 3)
-                                //                                            Log(log, "Crystal DiskMark Pass -Read");
-                                //                                        else
-                                //                                            Log(log, "Crystal DiskMark Fail - Read");
-                                //                                    }
-
-                                //                                }
-                                //                                Log(log, "First Text Box-" + ftxt.Name);
-
-                                //                                var Stxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
-                                //                                if (Stxt != null)
-                                //                                {
-                                //                                    var Sval = Stxt.ToString().Split('.');
-                                //                                    if (Sval.Length > 0)
-                                //                                    {
-                                //                                        if (Sval[0].Length > 3)
-                                //                                            Log(log, "Crystal DiskMark Pass -write");
-                                //                                        else
-                                //                                            Log(log, "Crystal DiskMark Fail - write");
-                                //                                    }
-
-                                //                                }
-                                //                                Log(log, "Second Text Box-" + Stxt.Name);
-
-                                // appnew.Close();
-                                //    }
-
-                                PartitionCount = 0;
-
-                                //  app.Close();
-
-
-
-                                break;
+                            break;
                             }
                             catch (Exception ex)
                             {
                                 Log(log, "error-" + ex.Message.ToString(), System.Drawing.Color.Red);
                                 writeErrorMessage(ex.Message.ToString(), "Crystal DiskMark");
-                                break;
+                            ppfrm.AddText("ERROR: " , Color.Red, true);
+                            ppfrm.AddText(ex.Message.ToString(), Color.Black);
+                            ppfrm.ShowDialog();
+                            ppfrm.Focus();
+                            ppfrm.Activate();
+                            break;
                             }
+                        finally
+                        {
+
+                            mainWindow.Close();
+                            app.Dispose();
+
+
+                        }
                         }
 
-                    }
+                   // }
                     
                 }
                
@@ -1371,6 +1554,8 @@ cf.ByControlType(ControlType.Window)
             });
         }
 
+
+
         public void writeErrorMessage(string errorMessage, string functionName)
         {
             var systemPath = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\BurnInTest" + "\\" + DateTime.Now.ToString("dd-MM-yyyy");
@@ -1388,6 +1573,70 @@ cf.ByControlType(ControlType.Window)
                 errLogs.WriteLine("---------------------------------------------------" + DateTime.Now + "----------------------------------------------" + Environment.NewLine);
                 errLogs.WriteLine(errorMessage + Environment.NewLine + "-----" + functionName);
                 errLogs.Close();
+            }
+        }
+
+        //public void popup(int message
+        //    )
+        //{
+        //    if (message == 1)
+        //    {
+        //        appfrm.AddText("SUCCESS: ", Color.Green, true);
+        //        appfrm.AddText("Data saved successfully\n", Color.Black);
+        //    }
+        //    else if (message == 2)
+        //    {
+        //        appfrm.AddText("Error: ", Color.Red, true);
+        //        appfrm.AddText("Check input values\n", Color.Black);
+        //        return;
+        //    }
+
+        //    // Bottom-right position
+        //    appfrm.StartPosition = FormStartPosition.Manual;
+        //    appfrm.Location = new Point(
+        //        Screen.PrimaryScreen.WorkingArea.Width - appfrm.Width - 10,
+        //        Screen.PrimaryScreen.WorkingArea.Height - appfrm.Height - 10);
+
+        //    appfrm.Show();
+        // }
+
+        public string getcrystalvalue(AutomationElement ftxt)
+        {
+            string readval = string.Empty;
+          
+            
+
+                if (ftxt != null)
+                {
+                    var fval = ftxt.ToString().Split('.');
+                    if (fval.Length > 0)
+                    {
+                        var readvalue = fval[0].Split(',');
+                        if (readvalue.Length > 0)
+                        {
+                            var readvalfinal = readvalue[1].Split(':');
+                            readval = readvalfinal[1].Trim();
+                          
+                            return readval.ToString();
+                        }
+                        else
+                            return string.Empty;
+
+                    }
+
+                }
+          
+            return readval;
+        }
+        static string SafeGet(Func<string> getter)
+        {
+            try
+            {
+                return string.IsNullOrWhiteSpace(getter()) ? "N/A" : getter();
+            }
+            catch
+            {
+                return "Not Supported";
             }
         }
         private void FrmBurnIntest_Load(object sender, EventArgs e)
