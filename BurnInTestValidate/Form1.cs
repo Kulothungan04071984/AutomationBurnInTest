@@ -37,8 +37,9 @@ namespace BurnInTestValidate
         string exePath = string.Empty;
         int PartitionCount = 0;
         popupform ppfrm = new popupform();
+        Blink frmblink = new Blink();
         //  Autopopclose appfrm = new Autopopclose();
-       // BlinkPopupForm popup = new BlinkPopupForm(6000);
+        // BlinkPopupForm popup = new BlinkPopupForm(6000);
         public FrmBurnIntest()
         {
             InitializeComponent();
@@ -489,54 +490,112 @@ cf.ByControlType(ControlType.Window)
                             } while (cryCheck.Name != "All");
                         }
                         Log(log, " D:Crystal Test to completed");
-                    var elements = mainWindowCrystal.FindAllDescendants();
+                    var validIds = new HashSet<string>
+{
+    "1009","1010","1011","1012",
+    "1014","1015","1016","1017"
+};
+
                     int count = 0;
-                    foreach (var el in elements)
+
+                    foreach (var el in mainWindowCrystal.FindAllDescendants())
                     {
-                        string name = SafeGet(() => el.Name);
                         string automationId = SafeGet(() => el.AutomationId);
+                        if (!validIds.Contains(automationId))
+                            continue;
+
+                        string name = SafeGet(() => el.Name);
                         string controlType = SafeGet(() => el.ControlType.ToString());
 
+                        var element = mainWindowCrystal.FindFirstDescendant(cf =>
+                            cf.ByAutomationId(automationId));
 
-                        if (automationId.ToString() == "1009" || automationId.ToString() == "1010" || automationId.ToString() == "1011" || automationId.ToString() == "1012" || automationId.ToString() == "1014" || automationId.ToString() == "1015" || automationId.ToString() == "1016" || automationId.ToString() == "1017")
+                        if (element == null)
+                            continue;
+
+                        string readValue = getcrystalvalue(element);
+
+                        // ❌ FAIL case
+                        if (readValue == "0")
                         {
+                            Log(log, "Crystal DiskMark Fail " + readValue);
+                            writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
 
-                            var ftxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId(automationId.ToString()));
-                            string readfinal = getcrystalvalue(ftxt);
-                           if (readfinal.ToString() == "0")
-                            {
-                                Log(log, "Crystal DiskMark Fail " + readfinal);
-                                writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
-                                ppfrm.AddText("ERROR: ", Color.Red, true);
-                                ppfrm.AddText("D:Crystal DiskMark Fail - Read!", Color.Black);
-                                ppfrm.ShowDialog();
-                                ppfrm.Focus();
-                                return;
-                            }
-                            count++;
-                            if (count == 8)
-                            {
-                                if (!(readfinal.ToString() == "0"))
-                                {
-                                    Log(log, "Crystal DiskMark Pass -" + readfinal);
-
-                                    this.BeginInvoke(new Action(() =>
-                                    {
-                                        BlinkPopupForm popup = new BlinkPopupForm(6000);
-                                        popup.SetMessage("Crystal DiskMark Pass -Read");
-                                        popup.Show();
-                                        popup.Activate();
-                                    }));
-                                }
-                                else
-                                    break;
-                            }
-                            Log(log, $"Type: {controlType} | Name: {name} | AutomationId: {automationId}");
-                           
+                            ppfrm.AddText("ERROR: ", Color.Red, true);
+                            ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
+                            ppfrm.ShowDialog();
+                            ppfrm.Focus();
+                            return;
                         }
 
-                       
+                        count++;
+
+                        // ✅ PASS case (all 8 values processed)
+                        if (count == validIds.Count)
+                        {
+                            Log(log, "Crystal DiskMark Pass - " + readValue);
+
+                            this.BeginInvoke(new Action(() =>
+                            {
+                                var popup = new BlinkPopupForm(6000);
+                                popup.SetMessage("Crystal DiskMark Pass - Read");
+                                popup.Show();
+                                popup.Activate();
+                            }));
+                            break;
+                        }
+
+                        Log(log, $"Type: {controlType} | Name: {name} | AutomationId: {automationId}");
                     }
+
+                    //var elements = mainWindowCrystal.FindAllDescendants();
+                    //int count = 0;
+                    //foreach (var el in elements)
+                    //{
+                    //    string name = SafeGet(() => el.Name);
+                    //    string automationId = SafeGet(() => el.AutomationId);
+                    //    string controlType = SafeGet(() => el.ControlType.ToString());
+
+
+                    //    if (automationId.ToString() == "1009" || automationId.ToString() == "1010" || automationId.ToString() == "1011" || automationId.ToString() == "1012" || automationId.ToString() == "1014" || automationId.ToString() == "1015" || automationId.ToString() == "1016" || automationId.ToString() == "1017")
+                    //    {
+
+                    //        var ftxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId(automationId.ToString()));
+                    //        string readfinal = getcrystalvalue(ftxt);
+                    //       if (readfinal.ToString() == "0")
+                    //        {
+                    //            Log(log, "Crystal DiskMark Fail " + readfinal);
+                    //            writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
+                    //            ppfrm.AddText("ERROR: ", Color.Red, true);
+                    //            ppfrm.AddText("D:Crystal DiskMark Fail - Read!", Color.Black);
+                    //            ppfrm.ShowDialog();
+                    //            ppfrm.Focus();
+                    //            return;
+                    //        }
+                    //        count++;
+                    //        if (count == 8)
+                    //        {
+                    //            if (!(readfinal.ToString() == "0"))
+                    //            {
+                    //                Log(log, "Crystal DiskMark Pass -" + readfinal);
+
+                    //                this.BeginInvoke(new Action(() =>
+                    //                {
+                    //                    BlinkPopupForm popup = new BlinkPopupForm(6000);
+                    //                    popup.SetMessage("Crystal DiskMark Pass -Read");
+                    //                    popup.Show();
+                    //                    popup.Activate();
+                    //                }));
+                    //            }
+                    //            else
+                    //                break;
+                    //        }
+                    //        Log(log, $"Type: {controlType} | Name: {name} | AutomationId: {automationId}");
+
+                    //    }
+
+
+                    //}
 
                     //var Stxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
                     //if (Stxt != null)
@@ -1368,19 +1427,27 @@ cf.ByControlType(ControlType.Window)
                             //    }
 
                             //Testing
-                            //ppfrm.AddText("SUCCESS: ", Color.Green, true);
-                            //ppfrm.AddText("Passmark Test Completed.\n", Color.Black);
-                            //ppfrm.ShowDialog();
+                            ppfrm.AddText("SUCCESS: ", Color.Green, true);
+                            ppfrm.AddText("Passmark Test Completed.\n", Color.Black);
+                            ppfrm.ShowDialog();
+                            ppfrm.Activate();
                             //popup.SetMessage("Passmark Test Completed");
                             //popup.Show();
                             //popup.Activate();
-                            this.BeginInvoke(new Action(() =>
-                            {
-                                BlinkPopupForm popup = new BlinkPopupForm(6000);
-                                popup.SetMessage("Passmark Test Completed..(Disk Partition , Crystal DiskMark, Burn In Test");
-                                popup.Show();
-                                popup.Activate();
-                            }));
+                            //this.BeginInvoke(new Action(() =>
+                            //{
+                            //    BlinkPopupForm popup = new BlinkPopupForm(6000);
+                            //    popup.SetMessage("Passmark Test Completed..(Disk Partition , Crystal DiskMark, Burn In Test");
+                            //    popup.Show();
+                            //    popup.Activate();
+                            //}));
+
+                            //frmblink.AddText("Message: ", Color.Green, true);
+                            //frmblink.AddText("Passmark Test - PASS", Color.Green);
+                            //frmblink.ShowDialog();
+                            //frmblink.Focus();
+                            //frmblink.Activate();
+
 
                             if (mainWindowCrystal == null)
                             {

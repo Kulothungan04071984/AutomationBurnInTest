@@ -94,6 +94,12 @@
     <Compile Include="Autopopclose.Designer.cs">
       <DependentUpon>Autopopclose.cs</DependentUpon>
     </Compile>
+    <Compile Include="Blink.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Blink.Designer.cs">
+      <DependentUpon>Blink.cs</DependentUpon>
+    </Compile>
     <Compile Include="BlinkPopupForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -128,6 +134,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Autopopclose.resx">
       <DependentUpon>Autopopclose.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Blink.resx">
+      <DependentUpon>Blink.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BlinkPopupForm.resx">
       <DependentUpon>BlinkPopupForm.cs</DependentUpon>
