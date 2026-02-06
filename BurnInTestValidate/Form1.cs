@@ -26,27 +26,46 @@ using System.Windows.Forms;
 using System.Windows.Ink;
 using System.Xml.Linq;
 using Application = FlaUI.Core.Application;
+using Label = System.Windows.Forms.Label;
 using Menu = FlaUI.Core.AutomationElements.Menu;
 using MenuItem = FlaUI.Core.AutomationElements.MenuItem;
 
 
 namespace BurnInTestValidate
 {
+   
     public partial class FrmBurnIntest : Form
     {
+        private RichTextBox _rtbLog;
+        private readonly IUserService _userService;
+        PassmarkHistory payhistory = new PassmarkHistory();
         string exePath = string.Empty;
         int PartitionCount = 0;
         popupform ppfrm = new popupform();
         Blink frmblink = new Blink();
         //  Autopopclose appfrm = new Autopopclose();
         // BlinkPopupForm popup = new BlinkPopupForm(6000);
-        public FrmBurnIntest()
+
+        private readonly string _customer;
+        //private readonly int _productTypeId;
+        private readonly string _productTypeName;
+        private readonly string _fgName;
+        private readonly UserSession _session;
+        public FrmBurnIntest(IUserService userService,UserSession userSession, string customer,
+        string productTypeName,
+        string fgName)
         {
             InitializeComponent();
+            _userService = userService;
+            _customer = customer;
+            _productTypeName = productTypeName;
+            _fgName = fgName;
+            _session = userSession;
             SetupUI();
-            
+           
         }
 
+     
 
         private void SetupUI()
         {
@@ -54,28 +73,68 @@ namespace BurnInTestValidate
             this.Size = new System.Drawing.Size(700, 500);
             this.StartPosition = FormStartPosition.CenterParent;
 
+            Panel infoPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 130,
+                Padding = new Padding(15),
+                BackColor = Color.WhiteSmoke
+            };
+            Label lblUser = CreateInfoLabel($"User : {_session.UserName}", 0);
+            Label lblCustomer = CreateInfoLabel($"Customer : {_customer}", 25);
+            Label lblProduct = CreateInfoLabel(
+                $"Product Type : {_productTypeName}  ", 50);
+            Label lblFG = CreateInfoLabel($"FG Name : {_fgName}", 75);
+
+            infoPanel.Controls.Add(lblUser);
+            infoPanel.Controls.Add(lblCustomer);
+            infoPanel.Controls.Add(lblProduct);
+            infoPanel.Controls.Add(lblFG);
+
+            this.Controls.Add(infoPanel);
             // Start Button
             var btnStart = new System.Windows.Forms.Button
             {
+                //Text = "Start Automation",
+                //Size = new System.Drawing.Size(150, 40),
+                //Location = new System.Drawing.Point(450, 20)
+
                 Text = "Start Automation",
-                Size = new System.Drawing.Size(150, 40),
-                Location = new System.Drawing.Point(450, 20)
+                Size = new Size(150, 40),
+                Location = new Point(500, 15),
+                BackColor = Color.FromArgb(0, 120, 215),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
             };
+            btnStart.FlatAppearance.BorderSize = 0;
             btnStart.Click += btnStart_Click;
-            this.Controls.Add(btnStart);
+            //this.Controls.Add(btnStart);
+            infoPanel.Controls.Add(btnStart);
 
             // Log Box
-            var rtbLog = new RichTextBox
+            _rtbLog = new RichTextBox
             {
                 Dock = DockStyle.Fill,
                 ReadOnly = true,
                 Font = new System.Drawing.Font("Consolas", 9),
                 Location = new System.Drawing.Point(20, 80)
             };
-            this.Controls.Add(rtbLog);
+            this.Controls.Add(_rtbLog);
 
             // Store for use
-            this.Tag = rtbLog;
+            this.Tag = _rtbLog;
+        }
+
+        private Label CreateInfoLabel(string text, int top)
+        {
+            return new Label
+            {
+                Text = text,
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.Green,
+                Location = new Point(15, top)
+            };
         }
 
         private async void btnStart_Click(object sender, EventArgs e)
@@ -168,46 +227,49 @@ exit";
                     bool diskExists = true;
                     bool success = false;
 
-                    if (fullError.Contains("no disk") ||
-                        fullError.Contains("there is no disk") ||
-                        fullError.Contains("the specified disk does not exist") ||
-                        fullOutput.Contains("no disk selected"))
-                    {
-                        diskExists = false;
-                    }
-                    else if (fullOutput.Contains("diskpart succeeded") ||
-                             fullOutput.Contains("100 percent completed") ||
-                             fullOutput.Contains("successfully formatted") ||
-                             fullOutput.Contains("assigned the drive letter"))
-                    {
-                        success = true;
-                   
+                if (fullError.Contains("no disk") ||
+                    fullError.Contains("there is no disk") ||
+                    fullError.Contains("the specified disk does not exist") ||
+                    fullOutput.Contains("no disk selected"))
+                {
+                    diskExists = false;
+                    payhistory.DiskPartition = "Fail";
+                }
+                else if (fullOutput.Contains("diskpart succeeded") ||
+                         fullOutput.Contains("100 percent completed") ||
+                         fullOutput.Contains("successfully formatted") ||
+                         fullOutput.Contains("assigned the drive letter"))
+                {
+                    success = true;
+
                 }
 
-                    //Testing
-                    // --- Now simple if/else (no tuples!) ---
-                    //if (!diskExists)
-                    //{
-                    //    if (driveLetter == 'E')
-                    //        PartitionCount = 1;
+                //Testing
+                // --- Now simple if/else (no tuples!) ---
+                //if (!diskExists)
+                //{
+                //    if (driveLetter == 'E')
+                //        PartitionCount = 1;
 
-                    //    Log(log, "No more disks found.\r\n", Color.Orange);
-                    //    //break;
-                    //}
+                //    Log(log, "No more disks found.\r\n", Color.Orange);
+                //    //break;
+                //}
 
-                    if (success)
-                    {
-                        Log(log, $"SUCCESS → {driveLetter}:\r\n", Color.LimeGreen);
-                        writeErrorMessage("Drive Partition", $"SUCCESS → {driveLetter}:\r\n");
-                        driveLetter++;
-                        diskIndex++;
-                    }
-                    else
-                    {
-                        Log(log, $"Skipped (already partitioned or failed)\r\n", Color.Yellow);
-                        writeErrorMessage("Drive Partition", $"Skipped (already partitioned or failed)\r\n");
-                        diskIndex++; // Try next disk anyway
-                    }
+                if (success)
+                {
+                    Log(log, $"SUCCESS → {driveLetter}:\r\n", Color.LimeGreen);
+                    writeErrorMessage("Drive Partition", $"SUCCESS → {driveLetter}:\r\n");
+                    driveLetter++;
+                    diskIndex++;
+                    payhistory.DiskPartition = "Pass";
+                }
+                else
+                {
+                    Log(log, $"Skipped (already partitioned or failed)\r\n", Color.Yellow);
+                    writeErrorMessage("Drive Partition", $"Skipped (already partitioned or failed)\r\n");
+                    diskIndex++; // Try next disk anyway
+                    payhistory.DiskPartition = "Pass";
+                }
 
                     await Task.Delay(3000); // Let disk settle
              //   }
@@ -221,6 +283,7 @@ exit";
             {
                 Log(log, $"Error: {ex.Message}\r\n", Color.Red);
                 writeErrorMessage($"Error: {ex.Message}\r\n","Error");
+                payhistory.DiskPartition = "Fail";
                 return "false";
             }
         }
@@ -241,6 +304,7 @@ exit";
             {
                 writeErrorMessage("File path Not Exists -", exePath.ToString());
                 Log(log, $"EXE not found: {exePath}", System.Drawing.Color.Red);
+                payhistory.burnintest ="Fail";
                 return;
             }
             writeErrorMessage("File path Exists -", exePath.ToString());
@@ -270,7 +334,9 @@ exit";
                     var Crystalpath = ConfigurationManager.AppSettings["Crystal"];
                     if (!File.Exists(Crystalpath))
                     {
-                        Log(log, "Crystal DiskMark Not Found"); writeErrorMessage("Error -", "Crystal DiskMark Not Found");
+                        Log(log, "Crystal DiskMark Not Found"); 
+                        writeErrorMessage("Error -", "Crystal DiskMark Not Found");
+                        payhistory.CrystalReport = "Fail";
                         return;
                     }
                     app = LaunchWithAdmin(Crystalpath);
@@ -285,7 +351,7 @@ cf.ByControlType(ControlType.Window)
                     {
                         Log(log, "CrystalDiskMark Window Not Found");
                         writeErrorMessage("Error -", "CrystalDiskMark Window Not Found");
-
+                        payhistory.CrystalReport = "Fail";
                         //popup.SetMessage("CrystalDiskMark Window Not Found!");
                         //popup.Show();
                         ppfrm.AddText("ERROR: ", Color.Red, true);
@@ -306,6 +372,7 @@ cf.ByControlType(ControlType.Window)
                     if (comboElement == null)
                     {
                         Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId}' not found.");
+                        payhistory.CrystalReport = "Fail";
                         return;
                     }
 
@@ -367,6 +434,7 @@ cf.ByControlType(ControlType.Window)
 
                     Log(log, "D: crystal Report Started.");
                     writeErrorMessage("Message", "D: crystal Report Started");
+                    payhistory.CrystalReport = "Pass";
 
 
 
@@ -375,107 +443,107 @@ cf.ByControlType(ControlType.Window)
 
                     //if (PartitionCount > 0)
                     //{
-//                        Log(log, "Check Next crystal Report Entry.");
-//                        appnew = LaunchWithAdmin(Crystalpath);
-//                        string comboAutomationId_1 = "1027";
-//                        System.Threading.Thread.Sleep(2000);
-//                        var emainWindowCrystal = desktop.FindFirstDescendant(cf =>
-//cf.ByControlType(ControlType.Window)
-//.And(cf.ByName("CrystalDiskMark 8.0.1 x86 [Admin]")))
-//?.AsWindow();
-//                        if (emainWindowCrystal == null)
-//                        {
-//                            Log(log, $"❌ Second window not found.");
-//                            return;
-//                        }
-//                        emainWindowCrystal.Focus();
+                    //                        Log(log, "Check Next crystal Report Entry.");
+                    //                        appnew = LaunchWithAdmin(Crystalpath);
+                    //                        string comboAutomationId_1 = "1027";
+                    //                        System.Threading.Thread.Sleep(2000);
+                    //                        var emainWindowCrystal = desktop.FindFirstDescendant(cf =>
+                    //cf.ByControlType(ControlType.Window)
+                    //.And(cf.ByName("CrystalDiskMark 8.0.1 x86 [Admin]")))
+                    //?.AsWindow();
+                    //                        if (emainWindowCrystal == null)
+                    //                        {
+                    //                            Log(log, $"❌ Second window not found.");
+                    //                            return;
+                    //                        }
+                    //                        emainWindowCrystal.Focus();
 
-//                        var comboElement_1 = emainWindowCrystal.FindFirstDescendant(cf =>
-//                    cf.ByAutomationId(comboAutomationId_1)
-//                      .And(cf.ByControlType(ControlType.ComboBox)));
-//                        if (comboElement_1 == null)
-//                        {
-//                            Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId_1}' not found.");
-//                            appnew.Close();
-//                            return;
-//                        }
-
-
-//                        var combo1 = comboElement_1.AsComboBox();
-
-//                        combo1?.Expand();
-//                        //Thread.Sleep(300); // allow items to appear
-
-//                        //Log(log, $"✅ ComboBox Found: {comboAutomationId_1}");
-//                        ////Log(log, "----------------------------------------------------");
-
-//                        //Log(log,"Second list --" + combo1.Items.Count().ToString());
-//                        Thread.Sleep(300);
-//                        writeErrorMessage("Message", "E: crystal Report ");
-//                        // 🔹 List all dropdown values
-//                        if (combo1?.Items != null && combo1.Items.Length > 0)
-//                        {
-
-//                            foreach (var item in combo1.Items)
-//                            {
-//                                Log(log, "Available Items:" + item.Name);
-//                                if (item.Name.Contains("E:"))
-//                                {
-//                                    Log(log, "Found E: Drive ");
-//                                    combo1.Select(item.Name);
-//                                    Log(log, "  • " + item.Text);
-//                                    eStatus = true;
-//                                    writeErrorMessage("Message", "E: crystal Report Found ");
-//                                    break;
-//                                }
-
-//                            }
-
-//                            if (!eStatus)
-//                            {
-//                                Log(log, "E: Drive not found.");
-//                                writeErrorMessage("Error", "E: Drive not found ");
-//                                appnew.Close(true);
-
-//                            }
-//                            else if (eStatus)
-//                            {
-//                                if (combo1?.SelectedItem != null)
-//                                    Log(log, $"Selected: {combo1.SelectedItem.Text}");
-//                                else
-//                                    Log(log, "No item currently selected.");
+                    //                        var comboElement_1 = emainWindowCrystal.FindFirstDescendant(cf =>
+                    //                    cf.ByAutomationId(comboAutomationId_1)
+                    //                      .And(cf.ByControlType(ControlType.ComboBox)));
+                    //                        if (comboElement_1 == null)
+                    //                        {
+                    //                            Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId_1}' not found.");
+                    //                            appnew.Close();
+                    //                            return;
+                    //                        }
 
 
-//                                combo1?.Collapse();
+                    //                        var combo1 = comboElement_1.AsComboBox();
 
-//                                Log(log, "Collapse");
+                    //                        combo1?.Expand();
+                    //                        //Thread.Sleep(300); // allow items to appear
 
-//                                //All Ok Button
-//                                var btnAll_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
-//                                if (btnAll_1 == null)
-//                                {
-//                                    Log(log, "Button All Not Found");
-//                                    return;
-//                                }
-//                                btnAll_1.Invoke();
-//                                Log(log, "All Button clicked");
-//                                writeErrorMessage("Message", "E: crystal Report Started ");
-//                                //if (combo1.Items.Length > 4)
-//                                //    PartitionCount = 2;
-//                            }
+                    //                        //Log(log, $"✅ ComboBox Found: {comboAutomationId_1}");
+                    //                        ////Log(log, "----------------------------------------------------");
+
+                    //                        //Log(log,"Second list --" + combo1.Items.Count().ToString());
+                    //                        Thread.Sleep(300);
+                    //                        writeErrorMessage("Message", "E: crystal Report ");
+                    //                        // 🔹 List all dropdown values
+                    //                        if (combo1?.Items != null && combo1.Items.Length > 0)
+                    //                        {
+
+                    //                            foreach (var item in combo1.Items)
+                    //                            {
+                    //                                Log(log, "Available Items:" + item.Name);
+                    //                                if (item.Name.Contains("E:"))
+                    //                                {
+                    //                                    Log(log, "Found E: Drive ");
+                    //                                    combo1.Select(item.Name);
+                    //                                    Log(log, "  • " + item.Text);
+                    //                                    eStatus = true;
+                    //                                    writeErrorMessage("Message", "E: crystal Report Found ");
+                    //                                    break;
+                    //                                }
+
+                    //                            }
+
+                    //                            if (!eStatus)
+                    //                            {
+                    //                                Log(log, "E: Drive not found.");
+                    //                                writeErrorMessage("Error", "E: Drive not found ");
+                    //                                appnew.Close(true);
+
+                    //                            }
+                    //                            else if (eStatus)
+                    //                            {
+                    //                                if (combo1?.SelectedItem != null)
+                    //                                    Log(log, $"Selected: {combo1.SelectedItem.Text}");
+                    //                                else
+                    //                                    Log(log, "No item currently selected.");
 
 
-                        //}
-                        //else
-                        //{
-                        //    Log(log, "⚠️ No items found or combo not expandable.");
-                        //}
+                    //                                combo1?.Collapse();
 
-                        // 🔹 Show currently selected item
+                    //                                Log(log, "Collapse");
+
+                    //                                //All Ok Button
+                    //                                var btnAll_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
+                    //                                if (btnAll_1 == null)
+                    //                                {
+                    //                                    Log(log, "Button All Not Found");
+                    //                                    return;
+                    //                                }
+                    //                                btnAll_1.Invoke();
+                    //                                Log(log, "All Button clicked");
+                    //                                writeErrorMessage("Message", "E: crystal Report Started ");
+                    //                                //if (combo1.Items.Length > 4)
+                    //                                //    PartitionCount = 2;
+                    //                            }
+
+
+                    //}
+                    //else
+                    //{
+                    //    Log(log, "⚠️ No items found or combo not expandable.");
+                    //}
+
+                    // 🔹 Show currently selected item
 
 
 
-                        Thread.Sleep(100000);
+                    Thread.Sleep(100000);
 
                         var cryCheck = mainWindowCrystal
     .FindFirstDescendant(cf => cf.ByName("Stop"))
@@ -501,6 +569,7 @@ cf.ByControlType(ControlType.Window)
                     foreach (var el in mainWindowCrystal.FindAllDescendants())
                     {
                         string automationId = SafeGet(() => el.AutomationId);
+                      
                         if (!validIds.Contains(automationId))
                             continue;
 
@@ -514,13 +583,28 @@ cf.ByControlType(ControlType.Window)
                             continue;
 
                         string readValue = getcrystalvalue(element);
-
+                        if(automationId == "1009")
+                        payhistory.read_one = readValue;
+                        else if(automationId == "1010")
+                            payhistory.read_two = readValue;
+                        else if(automationId == "1011")
+                            payhistory.read_three = readValue;
+                        else if(automationId == "1012")
+                            payhistory.read_four = readValue;
+                        else if (automationId == "1014")
+                            payhistory.write_one = readValue;
+                        else if (automationId == "1015")
+                            payhistory.write_two = readValue;
+                        else if (automationId == "1016")
+                            payhistory.write_three = readValue;
+                        else if (automationId == "1017")
+                            payhistory.write_four = readValue;
                         // ❌ FAIL case
                         if (readValue == "0")
                         {
                             Log(log, "Crystal DiskMark Fail " + readValue);
                             writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
-
+                            payhistory.CrystalReport = "Fail";
                             ppfrm.AddText("ERROR: ", Color.Red, true);
                             ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
                             ppfrm.ShowDialog();
@@ -542,9 +626,10 @@ cf.ByControlType(ControlType.Window)
                                 popup.Show();
                                 popup.Activate();
                             }));
+                            payhistory.CrystalReport = "Pass";
                             break;
                         }
-
+                        
                         Log(log, $"Type: {controlType} | Name: {name} | AutomationId: {automationId}");
                     }
 
@@ -714,7 +799,8 @@ cf.ByControlType(ControlType.Window)
                         {
                             Log(log, "Main window not found", System.Drawing.Color.Red);
                             writeErrorMessage("Main window not found", "Error");
-                            return;
+                        payhistory.burnintest = "Fail";
+                        return;
                         }
 
                         mainWindow.Focus();
@@ -725,16 +811,16 @@ cf.ByControlType(ControlType.Window)
                         if (menuBar == null)
                         {
                             Log(log, "Menu bar not found", System.Drawing.Color.Red);
-
-                            return;
+                        payhistory.burnintest = "Fail";
+                        return;
                         }
                         System.Threading.Thread.Sleep(1500);
                         var configMenu = mainWindow.FindFirstDescendant(cf => cf.ByName("Configuration"))?.AsMenuItem();
                         if (configMenu == null)
                         {
                             Log(log, "Configuration menu not found", System.Drawing.Color.Red);
-
-                            return;
+                        payhistory.burnintest = "Fail";
+                        return;
                         }
                         configMenu?.Click();
                         Log(log, "Configuration menu Clicked", System.Drawing.Color.Green);
@@ -767,7 +853,8 @@ cf.ByControlType(ControlType.Window)
                                 if (prefWindow == null)
                                 {
                                     Log(log, "BurnInTest Preferences window not found.");
-                                    return;
+                                payhistory.burnintest = "Fail";
+                                return;
                                 }
                                 prefWindow.Focus();
                                 Log(log, "BurnInTest Preferences window Focus.");
@@ -779,7 +866,8 @@ cf.ByControlType(ControlType.Window)
                                 if (checkbox == null)
                                 {
                                     Log(log, "Checkbox not found (check AutomationId-)" + checkbox.AutomationId + "-" + checkbox.Name);
-                                    return;
+                                payhistory.burnintest = "Fail";
+                                return;
                                 }
                                 checkbox.IsChecked = true;
                                 Thread.Sleep(500);
@@ -792,7 +880,8 @@ cf.ByControlType(ControlType.Window)
                                     if (lstC == null)
                                     {
                                         Log(log, "List Item Not Fount-" + i.ToString());
-                                        break;
+                                    payhistory.burnintest = "Fail";
+                                    break;
                                     }
                                     string lstName = lstC.Name.ToString();
                                     string checkCDrive = lstName.Substring(0, 2);
@@ -805,7 +894,8 @@ cf.ByControlType(ControlType.Window)
                                         if (checkC == null)
                                         {
                                             Log(log, "ListView C: not found .");
-                                            return;
+                                        payhistory.burnintest = "Fail";
+                                        return;
                                         }
                                         Log(log, "ListView C: found");
                                         checkC.IsChecked = false;
@@ -822,7 +912,8 @@ cf.ByControlType(ControlType.Window)
                                         if (checkD == null)
                                         {
                                             Log(log, "ListView D: not found .");
-                                            return;
+                                        payhistory.burnintest = "Fail";
+                                        return;
                                         }
                                         Log(log, "ListView D: found");
                                         checkD.IsChecked = true;
@@ -830,7 +921,8 @@ cf.ByControlType(ControlType.Window)
                                         if (fileSizeD == null)
                                         {
                                             Log(log, "File Size Box Not Found", System.Drawing.Color.Red);
-                                            return;
+                                        payhistory.burnintest = "Fail";
+                                        return;
                                         }
                                         System.Threading.Thread.Sleep(500);
                                         var filesized = fileSizeD.Patterns.Value.Pattern;
@@ -849,7 +941,8 @@ cf.ByControlType(ControlType.Window)
                                         if (comboElement_D == null)
                                         {
                                             Log(log, "D: Block Size Box Not Found", System.Drawing.Color.Red);
-                                            return;
+                                        payhistory.burnintest = "Fail";
+                                        return;
                                         }
                                         var combod = comboElement_D.AsComboBox();
                                         combod.Focus();
@@ -863,7 +956,8 @@ cf.ByControlType(ControlType.Window)
                                         if (combod.Value.ToString() != "256")
                                         {
                                             Log(log, "D:Block Size value 256 Not selectd" + combod.Value.ToString());
-                                            return;
+                                        payhistory.burnintest = "Fail";
+                                        return;
                                         }
                                         Log(log, " D: Block Size value Selected" + combod.Value.ToString());
                                         //break;
@@ -877,7 +971,8 @@ cf.ByControlType(ControlType.Window)
                                         if (checkE == null)
                                         {
                                             Log(log, "ListView E: not found .");
-                                            return;
+                                        payhistory.burnintest = "Fail";
+                                        return;
                                         }
                                         Log(log, "ListView E: found");
                                         checkE.IsChecked = true;
@@ -886,7 +981,8 @@ cf.ByControlType(ControlType.Window)
                                         if (fileSizeE == null)
                                         {
                                             Log(log, "E:File Size Box Not Found", System.Drawing.Color.Red);
-                                            return;
+                                        payhistory.burnintest = "Fail";
+                                        return;
                                         }
 
                                         var filesizee = fileSizeE.Patterns.Value.Pattern;
@@ -905,7 +1001,8 @@ cf.ByControlType(ControlType.Window)
                                         if (comboElement_E == null)
                                         {
                                             Log(log, "E: Block Size Box Not Found", System.Drawing.Color.Red);
-                                            return;
+                                        payhistory.burnintest = "Fail";
+                                        return;
                                         }
 
 
@@ -921,7 +1018,8 @@ cf.ByControlType(ControlType.Window)
                                         if (comboe.Value.ToString() != "256")
                                         {
                                             Log(log, "E Block Size value 256 Not selectd" + comboe.Value.ToString());
-                                            return;
+                                        payhistory.burnintest = "Fail";
+                                        return;
                                         }
                                         Log(log, " E: Block Size value Selected" + comboe.Value.ToString());
 
@@ -938,15 +1036,16 @@ cf.ByControlType(ControlType.Window)
 
                                 var okButton = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1"))?.AsButton();
 
-                                if (okButton != null)
-                                {
-                                    okButton.Invoke();
-                                    Log(log, "Clicked OK button.");
-                                }
-                                else
-                                {
-                                    Log(log, "OK button not found (check AutomationId).");
-                                }
+                            if (okButton != null)
+                            {
+                                okButton.Invoke();
+                                Log(log, "Clicked OK button.");
+                            }
+                            else
+                            {
+                                Log(log, "OK button not found (check AutomationId).");
+                                payhistory.burnintest = "Fail";
+                            }
 
                                 configMenu?.Click();
 
@@ -960,8 +1059,9 @@ cf.ByControlType(ControlType.Window)
                                 {
 
                                     Log(log, "Test Selection & Duty Cycles not found-", System.Drawing.Color.Green);
+                                payhistory.burnintest = "Fail";
 
-                                }
+                            }
                                 else
                                 {
                                     Log(log, "Test Selection & Duty Cycles found-", System.Drawing.Color.Green);
@@ -977,7 +1077,8 @@ cf.ByControlType(ControlType.Window)
                                 if (prefWindowcycles == null)
                                 {
                                     Console.WriteLine("Test selection and duty cycles window not found.");
-                                    return;
+                                payhistory.burnintest = "Fail";
+                                return;
                                 }
 
                                 prefWindowcycles.Focus();
@@ -1071,7 +1172,8 @@ cf.ByControlType(ControlType.Window)
                                 if (prefWindowcyclesWarning == null)
                                 {
                                     Console.WriteLine("warning Getting ready to run Burn in tests window not found.");
-                                    return;
+                                payhistory.burnintest = "Fail";
+                                return;
                                 }
 
 
@@ -1427,6 +1529,7 @@ cf.ByControlType(ControlType.Window)
                             //    }
 
                             //Testing
+                            payhistory.overall_result = "Pass";
                             ppfrm.AddText("SUCCESS: ", Color.Green, true);
                             ppfrm.AddText("Passmark Test Completed.\n", Color.Black);
                             ppfrm.ShowDialog();
@@ -1479,7 +1582,8 @@ cf.ByControlType(ControlType.Window)
                             }
                             catch (Exception ex)
                             {
-                                Log(log, "error-" + ex.Message.ToString(), System.Drawing.Color.Red);
+                            payhistory.overall_result = "Fail";
+                            Log(log, "error-" + ex.Message.ToString(), System.Drawing.Color.Red);
                                 writeErrorMessage(ex.Message.ToString(), "Crystal DiskMark");
                             ppfrm.AddText("ERROR: " , Color.Red, true);
                             ppfrm.AddText(ex.Message.ToString(), Color.Black);
@@ -1493,7 +1597,7 @@ cf.ByControlType(ControlType.Window)
 
                             mainWindow.Close();
                             app.Dispose();
-
+                            _userService.inserthistory(payhistory);
 
                         }
                         }
