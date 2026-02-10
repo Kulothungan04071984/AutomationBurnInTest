@@ -13,6 +13,7 @@ namespace BurnInTestValidate
         DataTable GetProductTypes();
         DataTable GetFGNames(int productTypeId);
         string Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true);
+        bool ValidateUser(string username, string password);
     }
            
 }

@@ -1,4 +1,8 @@
-﻿using System;
+﻿using FlaUI.Core.AutomationElements;
+using FlaUI.Core.Conditions;
+using FlaUI.Core.Definitions;
+using FlaUI.UIA3.Patterns;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -8,7 +12,10 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Forms;
 using static BurnInTestValidate.Program;
 
 
@@ -389,6 +396,28 @@ namespace BurnInTestValidate
             return dt;
         }
 
+        public bool ValidateUser(string username, string password)
+        {
+            bool isValid = false;
+            using (SqlConnection sqlConnection = _ConnectionString.CreateConnection(Program.DatabaseType.Master))
+            {
+                using (SqlCommand sqlCommand = new SqlCommand("pro_validateUser", sqlConnection))
+                {
+                    sqlCommand.CommandType = System.Data.CommandType.StoredProcedure;
+                    sqlCommand.Parameters.AddWithValue("@username", username);
+                    sqlCommand.Parameters.AddWithValue("@password", password);
+                    sqlConnection.Open();
+                    var result = sqlCommand.ExecuteScalar();
+                    if (result != null && Convert.ToInt32(result) > 0)
+                    {
+                        isValid = true;
+                    }
+                    sqlConnection.Close();
+                }
+            }
+            return isValid;
+        }
+
         //private void Fill_Response_Data(string datarep)
         //{
         //    txt_live_stat.AppendText(
@@ -401,5 +430,7 @@ namespace BurnInTestValidate
         //    Application.DoEvents();
         //}
 
+
+      
     }
 }

@@ -5,6 +5,8 @@ using FlaUI.Core.Definitions;
 using FlaUI.Core.Input;
 using FlaUI.Core.WindowsAPI;
 using FlaUI.UIA3;
+using FlaUI.UIA3.Patterns;
+using Microsoft.VisualBasic.FileIO;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,13 +16,10 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Management;
-using System.Management;
-using System.Net.Http;
-using System.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Ink;
@@ -62,10 +61,7 @@ namespace BurnInTestValidate
             _fgName = fgName;
             _session = userSession;
             SetupUI();
-           
         }
-
-     
 
         private void SetupUI()
         {
@@ -81,15 +77,17 @@ namespace BurnInTestValidate
                 BackColor = Color.WhiteSmoke
             };
             Label lblUser = CreateInfoLabel($"User : {_session.UserName}", 0);
-            Label lblCustomer = CreateInfoLabel($"Customer : {_customer}", 25);
+            Label lblCustomer = CreateInfoLabel($"Customer : {_customer}", 20);
             Label lblProduct = CreateInfoLabel(
-                $"Product Type : {_productTypeName}  ", 50);
-            Label lblFG = CreateInfoLabel($"FG Name : {_fgName}", 75);
+                $"Product Type : {_productTypeName}  ", 40);
+            Label lblFG = CreateInfoLabel($"FG Name : {_fgName}", 60);
+            Label lblserialNo = CreateInfoLabel($"Serial No : 123456", 80);
 
             infoPanel.Controls.Add(lblUser);
             infoPanel.Controls.Add(lblCustomer);
             infoPanel.Controls.Add(lblProduct);
             infoPanel.Controls.Add(lblFG);
+            infoPanel.Controls.Add(lblserialNo);
 
             this.Controls.Add(infoPanel);
             // Start Button
@@ -100,8 +98,8 @@ namespace BurnInTestValidate
                 //Location = new System.Drawing.Point(450, 20)
 
                 Text = "Start Automation",
-                Size = new Size(150, 40),
-                Location = new Point(500, 15),
+                Size = new System.Drawing.Size(150, 40),
+                Location = new System.Drawing.Point(500, 15),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat
@@ -131,14 +129,17 @@ namespace BurnInTestValidate
             {
                 Text = text,
                 AutoSize = true,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Font = new Font("Segoe UI", 10, System.Drawing.FontStyle.Bold),
                 ForeColor = Color.Green,
-                Location = new Point(15, top)
+                Location = new System.Drawing.Point(15, top)
             };
         }
 
         private async void btnStart_Click(object sender, EventArgs e)
         {
+            getSerialNo(@"D:\\hwi_822\\hwi_822\\");
+            return;
+
             var btn = (System.Windows.Forms.Button)sender;
             btn.Enabled = false;
             var log = (RichTextBox)this.Tag;
@@ -1813,6 +1814,308 @@ cf.ByControlType(ControlType.Window)
         private void FrmBurnIntest_Load(object sender, EventArgs e)
         {
 
+        }
+
+
+        public async void getSerialNo(string HW_PATH)
+        {
+            string[] invalues = new string[7]; // Adjust size based on how many values you want to capture
+                                               //if (cmb_fg.SelectedIndex != 0)
+                                               //{
+            ProcessStartInfo proc = new ProcessStartInfo();
+            proc.FileName = Path.Combine(HW_PATH, "HWiNFO64.exe");
+            proc.WorkingDirectory = HW_PATH;
+            proc.Verb = "runas";
+            Process.Start(proc);
+            this.SendToBack();
+            Thread.Sleep(5000);
+
+            // --- Ensure HWiNFO is running ---
+            Process[] hwinfoApps = Process.GetProcessesByName("HWiNFO64");
+
+            if (hwinfoApps.Length == 0)
+            {
+                System.Windows.Forms.MessageBox.Show("Unable to Open HWiNFO... Contact Test Dev Team",
+                    "HWiNFO Not Opening", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //Application.Exit();
+                return;
+            }
+
+            // --- Retrieve main window AutomationElement ---
+            //AutomationElement hwWindow = AutomationElement.FromHandle(hwinfoApps[0].MainWindowHandle);
+            using (var automation = new UIA3Automation())
+            {
+                Thread.Sleep(1000);
+                var hwWindow = automation.FromHandle(
+                    hwinfoApps[0].MainWindowHandle
+                ).AsWindow();
+
+
+                if (hwWindow == null)
+                {
+                    System.Windows.Forms.MessageBox.Show("Automation Element is Not Working",
+                        "UI Element Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    // Application.Exit();
+                    return;
+                }
+
+                // --- Click "Save Report" Button ---
+                ClickButtonByName(hwWindow, "Save Report");
+
+                Thread.Sleep(1000);
+
+                // --- Find the modal dialog window ---
+                //AutomationElement dialog = FindDialogWindow();
+                //if (dialog == null)
+                //{
+                //    System.Windows.Forms.MessageBox.Show("Cannot find Save Report dialog.");
+                //    return;
+                //}
+
+                //// --- Select CSV RadioButton ---
+                //SelectRadioButton(dialog, "Comma Delimited File");
+
+                //Thread.Sleep(500);
+
+                //// --- Click Next Button ---
+                //ClickButtonByName(dialog, "Next");
+
+                //Thread.Sleep(1000);
+
+                //// --- Click Finish Button ---
+                //ClickButtonByName(dialog, "Finish");
+
+                //Thread.Sleep(3000);
+
+                // --- Kill HWiNFO processes ---
+                try
+                {
+                    foreach (Process p in hwinfoApps)
+                    {
+                        if (!p.HasExited)
+                            p.Kill();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.Forms.MessageBox.Show(ex.Message);
+                }
+
+                this.BringToFront();
+                this.Refresh();
+
+
+                string csvFilePath = Path.Combine(HW_PATH, Environment.MachineName + ".csv");
+
+                List<string[]> lines = new List<string[]>();
+
+                using (TextFieldParser parser = new TextFieldParser(csvFilePath))
+                {
+                    parser.TextFieldType = FieldType.Delimited;
+                    parser.SetDelimiters(",");
+
+                    while (!parser.EndOfData)
+                    {
+                        try
+                        {
+                            string[] fields = parser.ReadFields();
+                            lines.Add(fields);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Windows.Forms.MessageBox.Show(ex.ToString());
+                        }
+                    }
+                }
+
+                //// Reverse SN
+                //char[] c = tb_SN.Text.ToCharArray();
+
+                //string reversed_sno =
+                //    c[6].ToString() + c[7] +
+                //    c[4] + c[5] +
+                //    c[2] + c[3] +
+                //    c[0] + c[1];
+
+
+                // -------- Loop through CSV --------
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    string[] rows = lines[i];
+
+                    if (rows.Length == 2)
+                    {
+                        if (rows[0] == "Module Serial Number:")
+                        {
+                            string rpt_SN = rows[1];
+
+                            // ⛔ REMOVE Contains()
+                            // ✔ Exact match instead
+                            //     if (rpt_SN.Trim() == tb_SN.Text.Trim())
+                            //     {
+                            for (int j = i; j >= 0; j--)
+                            {
+                                // Serial number example
+                                invalues[0] = lines[i][1].Split('(')[1].Substring(0, 8);
+
+                                // Optional values
+                                // invalues[1] = lines[i - 7][1];
+                                // invalues[2] = lines[i - 5][1];
+                                // invalues[3] = lines[i - 4][1];
+                                // invalues[4] = lines[i - 3][1];
+                                // invalues[5] = lines[i - 2][1];
+                                // invalues[6] = lines[i + 1][1];
+                            }
+                            //  }
+                            System.Windows.Forms.MessageBox.Show(invalues[0]);
+                        }
+                    }
+                }
+
+
+
+
+
+                //}
+
+                //else
+                //    {
+                //        // txtPCBSerialNo.Text = string.Empty;
+                //        System.Windows.Forms.MessageBox.Show("Please Select the Fg Number");
+
+
+                //    }
+            }
+
+            // }
+            //else
+            //{
+            //    barcodeData.Append((char)e.KeyValue);
+            //}
+
+
+            //else
+            //{
+            //    //lbl_result.ForeColor = Color.DarkRed;
+            //    //lbl_result.Text = "Please select the Fg Name ";
+            //}
+
+
+        }
+
+
+        private void ClickButtonByName(AutomationElement root, string containsText)
+        {
+            using (var automation = new UIA3Automation())
+            {
+                var buttonCondition = automation.ConditionFactory
+          .ByControlType(FlaUI.Core.Definitions.ControlType.Button);
+
+                //var buttons = root.FindAllDescendants();
+                //""AutomationId:, Name:Create a Report File, ControlType:button, FrameworkId:"
+                var buttons = root.FindAllDescendants();
+                var buttonElement = root.FindFirstDescendant(cf => cf.ByName("Create a Report File"));
+                if (buttonElement != null)
+                {
+                    var btn = buttonElement.AsButton();
+                    if (btn != null)
+                    {
+                        btn.Invoke();
+                    }
+                    else
+                    {
+                       return;
+                    }
+                }
+                Thread.Sleep(500);
+                var delomited = root.FindFirstDescendant(cf => cf.ByAutomationId("1219"));
+                if (delomited != null)
+                {
+                    var delbtn = delomited.AsButton();
+                    if (delbtn != null)
+                    {
+                        delbtn.Invoke();
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                Thread.Sleep(500);
+                var nextbtn = root.FindFirstDescendant(cf => cf.ByAutomationId("12324"));
+                if (nextbtn != null)
+                {
+                    var nbtn = nextbtn.AsButton();
+                    if (nbtn != null)
+                    {
+                        nbtn.Invoke();
+                      
+                    }
+                    else
+                    {            
+                        return;
+                    }
+                }
+                Thread.Sleep(500);
+                var finishbtn = root.FindFirstDescendant(cf => cf.ByAutomationId("12325"));
+                if(finishbtn != null)
+                {
+                    var fbtn = finishbtn.AsButton();
+                    if (fbtn != null)
+                    {
+                        fbtn.Invoke();
+                      
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
+              
+            }
+
+        }
+
+        private void SelectRadioButton(AutomationElement root, string containsText)
+        {
+            using (var automation = new UIA3Automation())
+            {
+                var rbCondition = automation.ConditionFactory
+         .ByControlType(FlaUI.Core.Definitions.ControlType.RadioButton);
+
+                var radioButtons = root.FindAll(TreeScope.Descendants, rbCondition);
+
+                foreach (var rb in radioButtons)
+                {
+                    if (rb.Name.Contains(containsText))
+                    {
+                        var selectionItem = rb.Patterns.SelectionItem;
+                        if (selectionItem.IsSupported)
+                        {
+                            selectionItem.Pattern.Select();
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+
+        private AutomationElement FindDialogWindow()
+        {
+            // Windows dialog = class #32770
+            //Condition dlgCond = new PropertyCondition(AutomationElement.ClassNameProperty, "#32770");
+            //var desktop = AutomationElement.RootElement;
+            using (var automation = new UIA3Automation())
+            {
+
+                var dlgCond = automation.ConditionFactory
+                    .ByClassName("#32770");
+
+                var desktop = automation.GetDesktop();
+
+                return desktop.FindFirst(TreeScope.Children, dlgCond);
+            }
         }
     }
 }

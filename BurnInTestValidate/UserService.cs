@@ -30,5 +30,10 @@ namespace BurnInTestValidate
             return _repo.Check_Curr_Stage(serialno, app_id, stage, boardonline);
         }
 
+        public bool ValidateUser(string username, string password)
+        {
+            return _repo.ValidateUser(username, password);
+        }
+
     }
 }

@@ -15,16 +15,18 @@ namespace BurnInTestValidate
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly UserSession _userSession;
+        private readonly IUserService _userService;
         private TextBox txtUser;
         private TextBox txtPassword;
         private Button btnLogin;
         private Label lblMessage;
-        public FrmLogin(IServiceProvider serviceProvider, UserSession userSession)
+        public FrmLogin(IServiceProvider serviceProvider, UserSession userSession, IUserService userService)
         {
             InitializeComponent();
             _serviceProvider = serviceProvider;
             SetupUI();
             _userSession = userSession;
+            _userService = userService;
         }
 
         private void SetupUI()
@@ -143,8 +145,9 @@ namespace BurnInTestValidate
                 return;
             }
             _userSession.UserName = txtUser.Text.Trim();
-            // Temporary check (replace with DB)
-            if (txtUser.Text.Trim() == "admin" && txtPassword.Text.Trim() == "1234")
+            var result = _userService.ValidateUser(txtUser.Text.Trim().ToString(), txtPassword.Text.Trim().ToString());
+           
+            if (result)
             {
                 this.Hide();
                 var burnInForm = _serviceProvider.GetRequiredService<FrmProductSelection>();
