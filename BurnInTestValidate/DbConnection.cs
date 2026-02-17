@@ -89,9 +89,9 @@ namespace BurnInTestValidate
             return result;
         }
 
-        public string Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
+        public bool Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
         {
-            string checkCurrStageResult = string.Empty;
+            bool checkCurrStageResult = false;
             try
             {
                 var con= _ConnectionString.CreateConnection(DatabaseType.BurnIn);
@@ -118,7 +118,7 @@ namespace BurnInTestValidate
                                 if (sdr["Next_Stage_id"].ToString() == app_id)
                                 {
                                     con.Close();
-                                    checkCurrStageResult = "true";
+                                    checkCurrStageResult = true;
                                 }
                                 else
                                 {
@@ -126,28 +126,28 @@ namespace BurnInTestValidate
                                                 "Expected is : " + sdr["Next_Stage_id"] + "|" + sdr["Next_Stage_name"] + ".\n" +
                                                 "Actual is : " + app_id + "|" + stage + ".";
                                     con.Close();
-                                    checkCurrStageResult = "false";
+                                    checkCurrStageResult = false;
                                 }
                             }
                             else
                             {
                                 errordesc = "No Data for this PCB : " + serialno + " in SFCS Master Table.";
                                 con.Close();
-                                checkCurrStageResult = "false";
+                                checkCurrStageResult = false;
                             }
                         }
                     }
                 }
                 else
                 {
-                    checkCurrStageResult = "true";
+                    checkCurrStageResult = true;
                 }
 
                 return checkCurrStageResult;
             }
             catch (Exception ex)
             {
-                checkCurrStageResult = "Exception. " + ex.Message + "-result : false";
+                checkCurrStageResult = false;
                 return checkCurrStageResult;
             }
         }

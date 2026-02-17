@@ -137,8 +137,13 @@ namespace BurnInTestValidate
 
         private async void btnStart_Click(object sender, EventArgs e)
         {
-            getSerialNo(@"D:\\hwi_822\\hwi_822\\");
-            return;
+           var chkserialNo =await getSerialNo(@"D:\\hwi_822\\hwi_822\\");
+            if (chkserialNo == false)
+            {
+                writeErrorMessage("Serial No File Not Found", @"D:\\hwi_822\\hwi_822\\");
+                System.Windows.Forms.MessageBox.Show("Serial No File Not Found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             var btn = (System.Windows.Forms.Button)sender;
             btn.Enabled = false;
@@ -294,8 +299,8 @@ exit";
             Log(log, "Disk Partition Start");
             // bool eStatus = false;
             //Testing
-            var status = await DiskPartitionDynamic_NoWMI(log);
-            if (status == "false") return;
+            //var status = await DiskPartitionDynamic_NoWMI(log);
+            //if (status == "false") return;
 
             //BurnIn Test Start
 
@@ -601,7 +606,7 @@ cf.ByControlType(ControlType.Window)
                         else if (automationId == "1017")
                             payhistory.write_four = readValue;
                         // ❌ FAIL case
-                        if (readValue == "0")
+                        if (readValue == "0" )
                         {
                             Log(log, "Crystal DiskMark Fail " + readValue);
                             writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
@@ -612,7 +617,17 @@ cf.ByControlType(ControlType.Window)
                             ppfrm.Focus();
                             return;
                         }
-
+                        if ((automationId == "1009" || automationId == "1014") && Convert.ToDecimal(readValue) <= 2999 )
+                        {
+                            Log(log, "Crystal DiskMark Fail " + readValue);
+                            writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
+                            payhistory.CrystalReport = "Fail";
+                            ppfrm.AddText("ERROR: ", Color.Red, true);
+                            ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
+                            ppfrm.ShowDialog();
+                            ppfrm.Focus();
+                            return;
+                        }
                         count++;
 
                         // ✅ PASS case (all 8 values processed)
@@ -1817,189 +1832,131 @@ cf.ByControlType(ControlType.Window)
         }
 
 
-        public async void getSerialNo(string HW_PATH)
+        public async Task<bool> getSerialNo(string HW_PATH)
         {
-            string[] invalues = new string[7]; // Adjust size based on how many values you want to capture
-                                               //if (cmb_fg.SelectedIndex != 0)
-                                               //{
-            ProcessStartInfo proc = new ProcessStartInfo();
-            proc.FileName = Path.Combine(HW_PATH, "HWiNFO64.exe");
-            proc.WorkingDirectory = HW_PATH;
-            proc.Verb = "runas";
-            Process.Start(proc);
-            this.SendToBack();
-            Thread.Sleep(5000);
-
-            // --- Ensure HWiNFO is running ---
-            Process[] hwinfoApps = Process.GetProcessesByName("HWiNFO64");
-
-            if (hwinfoApps.Length == 0)
+            bool checkSN = false;
+            try
             {
-                System.Windows.Forms.MessageBox.Show("Unable to Open HWiNFO... Contact Test Dev Team",
-                    "HWiNFO Not Opening", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                //Application.Exit();
-                return;
-            }
+                string[] invalues = new string[7];
+                string serialno = string.Empty;
+                ProcessStartInfo proc = new ProcessStartInfo();
+                proc.FileName = Path.Combine(HW_PATH, "HWiNFO64.exe");
+                proc.WorkingDirectory = HW_PATH;
+                proc.Verb = "runas";
+                Process.Start(proc);
+                this.SendToBack();
+                Thread.Sleep(5000);
 
-            // --- Retrieve main window AutomationElement ---
-            //AutomationElement hwWindow = AutomationElement.FromHandle(hwinfoApps[0].MainWindowHandle);
-            using (var automation = new UIA3Automation())
-            {
-                Thread.Sleep(1000);
-                var hwWindow = automation.FromHandle(
-                    hwinfoApps[0].MainWindowHandle
-                ).AsWindow();
+                // --- Ensure HWiNFO is running ---
+                Process[] hwinfoApps = Process.GetProcessesByName("HWiNFO64");
 
-
-                if (hwWindow == null)
+                if (hwinfoApps.Length == 0)
                 {
-                    System.Windows.Forms.MessageBox.Show("Automation Element is Not Working",
-                        "UI Element Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    // Application.Exit();
-                    return;
+                    System.Windows.Forms.MessageBox.Show("Unable to Open HWiNFO... Contact Test Dev Team",
+                        "HWiNFO Not Opening", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //Application.Exit();
+                    return checkSN = false;
                 }
 
-                // --- Click "Save Report" Button ---
-                ClickButtonByName(hwWindow, "Save Report");
-
-                Thread.Sleep(1000);
-
-                // --- Find the modal dialog window ---
-                //AutomationElement dialog = FindDialogWindow();
-                //if (dialog == null)
-                //{
-                //    System.Windows.Forms.MessageBox.Show("Cannot find Save Report dialog.");
-                //    return;
-                //}
-
-                //// --- Select CSV RadioButton ---
-                //SelectRadioButton(dialog, "Comma Delimited File");
-
-                //Thread.Sleep(500);
-
-                //// --- Click Next Button ---
-                //ClickButtonByName(dialog, "Next");
-
-                //Thread.Sleep(1000);
-
-                //// --- Click Finish Button ---
-                //ClickButtonByName(dialog, "Finish");
-
-                //Thread.Sleep(3000);
-
-                // --- Kill HWiNFO processes ---
-                try
+                // --- Retrieve main window AutomationElement ---
+                //AutomationElement hwWindow = AutomationElement.FromHandle(hwinfoApps[0].MainWindowHandle);
+                using (var automation = new UIA3Automation())
                 {
-                    foreach (Process p in hwinfoApps)
+                    Thread.Sleep(1500);
+                    var hwWindow = automation.FromHandle(
+                        hwinfoApps[0].MainWindowHandle
+                    ).AsWindow();
+
+
+                    if (hwWindow == null)
                     {
-                        if (!p.HasExited)
-                            p.Kill();
+                        System.Windows.Forms.MessageBox.Show("Automation Element is Not Working",
+                            "UI Element Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        // Application.Exit();
+                        return checkSN = false;
                     }
-                }
-                catch (Exception ex)
-                {
-                    System.Windows.Forms.MessageBox.Show(ex.Message);
-                }
 
-                this.BringToFront();
-                this.Refresh();
+                    // --- Click "Save Report" Button ---
+                    ClickButtonByName(hwWindow, "Save Report");
+
+                    Thread.Sleep(1000);
 
 
-                string csvFilePath = Path.Combine(HW_PATH, Environment.MachineName + ".csv");
-
-                List<string[]> lines = new List<string[]>();
-
-                using (TextFieldParser parser = new TextFieldParser(csvFilePath))
-                {
-                    parser.TextFieldType = FieldType.Delimited;
-                    parser.SetDelimiters(",");
-
-                    while (!parser.EndOfData)
+                    // --- Kill HWiNFO processes ---
+                    try
                     {
-                        try
+                        foreach (Process p in hwinfoApps)
                         {
-                            string[] fields = parser.ReadFields();
-                            lines.Add(fields);
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Windows.Forms.MessageBox.Show(ex.ToString());
+                            if (!p.HasExited)
+                                p.Kill();
                         }
                     }
-                }
-
-                //// Reverse SN
-                //char[] c = tb_SN.Text.ToCharArray();
-
-                //string reversed_sno =
-                //    c[6].ToString() + c[7] +
-                //    c[4] + c[5] +
-                //    c[2] + c[3] +
-                //    c[0] + c[1];
-
-
-                // -------- Loop through CSV --------
-                for (int i = 0; i < lines.Count; i++)
-                {
-                    string[] rows = lines[i];
-
-                    if (rows.Length == 2)
+                    catch (Exception ex)
                     {
-                        if (rows[0] == "Module Serial Number:")
-                        {
-                            string rpt_SN = rows[1];
+                        System.Windows.Forms.MessageBox.Show(ex.Message);
+                    }
 
-                            // ⛔ REMOVE Contains()
-                            // ✔ Exact match instead
-                            //     if (rpt_SN.Trim() == tb_SN.Text.Trim())
-                            //     {
-                            for (int j = i; j >= 0; j--)
+                    this.BringToFront();
+                    this.Refresh();
+
+
+                    string csvFilePath = Path.Combine(HW_PATH, Environment.MachineName + ".csv");
+
+                    List<string[]> lines = new List<string[]>();
+
+                    using (TextFieldParser parser = new TextFieldParser(csvFilePath))
+                    {
+                        parser.TextFieldType = FieldType.Delimited;
+                        parser.SetDelimiters(",");
+
+                        while (!parser.EndOfData)
+                        {
+                            try
                             {
-                                // Serial number example
-                                invalues[0] = lines[i][1].Split('(')[1].Substring(0, 8);
-
-                                // Optional values
-                                // invalues[1] = lines[i - 7][1];
-                                // invalues[2] = lines[i - 5][1];
-                                // invalues[3] = lines[i - 4][1];
-                                // invalues[4] = lines[i - 3][1];
-                                // invalues[5] = lines[i - 2][1];
-                                // invalues[6] = lines[i + 1][1];
+                                string[] fields = parser.ReadFields();
+                                lines.Add(fields);
                             }
-                            //  }
-                            System.Windows.Forms.MessageBox.Show(invalues[0]);
+                            catch (Exception ex)
+                            {
+                                System.Windows.Forms.MessageBox.Show(ex.ToString());
+                                return checkSN = false;
+                            }
                         }
                     }
+
+
+
+                    // -------- Loop through CSV --------
+                    for (int i = 0; i < lines.Count; i++)
+                    {
+                        string[] rows = lines[i];
+
+                        if (rows.Length == 2)
+                        {
+                            if (rows[0] == "Model Serial Number:")
+                            {
+                                // string rpt_SN = rows[1];
+
+                                serialno = rows[1].Split('(')[1].Replace(')', ' ').Trim();
+                                //System.Windows.Forms.MessageBox.Show(serialno);
+                                 checkSN = _userService.Check_Curr_Stage(serialno, "262", "Performance Test", true);
+                                return checkSN;
+                            }
+                        }
+                    }
+
+
+
+
+
                 }
-
-
-
-
-
-                //}
-
-                //else
-                //    {
-                //        // txtPCBSerialNo.Text = string.Empty;
-                //        System.Windows.Forms.MessageBox.Show("Please Select the Fg Number");
-
-
-                //    }
             }
-
-            // }
-            //else
-            //{
-            //    barcodeData.Append((char)e.KeyValue);
-            //}
-
-
-            //else
-            //{
-            //    //lbl_result.ForeColor = Color.DarkRed;
-            //    //lbl_result.Text = "Please select the Fg Name ";
-            //}
-
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show(ex.ToString());
+                return checkSN=false;
+            }
+            return checkSN;
 
         }
 

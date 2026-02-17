@@ -103,7 +103,7 @@ namespace BurnInTestValidate
         {
             if (txtUser.Text == "Username")
             {
-                txtUser.Text = "";
+                txtUser.Text = string.Empty;
                 txtUser.ForeColor = Color.Black;
             }
         }
@@ -121,7 +121,7 @@ namespace BurnInTestValidate
         {
             if (txtPassword.Text == "Password")
             {
-                txtPassword.Text = "";
+                txtPassword.Text = string.Empty;
                 txtPassword.ForeColor = Color.Black;
                 txtPassword.UseSystemPasswordChar = true;
             }
@@ -129,33 +129,49 @@ namespace BurnInTestValidate
 
         private void SetPassPlaceholder(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtPassword.Text))
+            try
             {
-                txtPassword.UseSystemPasswordChar = false;
-                txtPassword.Text = "Password";
-                txtPassword.ForeColor = Color.Gray;
+                if (string.IsNullOrWhiteSpace(txtPassword.Text))
+                {
+                    txtPassword.UseSystemPasswordChar = false;
+                    txtPassword.Text = "Password";
+                    txtPassword.ForeColor = Color.Gray;
+                }
+            }
+            catch (Exception ex)
+            {
+                lblMessage.Text = "An error occurred while setting password placeholder: " + ex.Message;
+                // Log the exception as needed
             }
         }
         private void Login()
         {
-            if (string.IsNullOrWhiteSpace(txtUser.Text) ||
-                string.IsNullOrWhiteSpace(txtPassword.Text))
+            try
             {
-                lblMessage.Text = "Please enter username and password";
-                return;
+                if (string.IsNullOrWhiteSpace(txtUser.Text) ||
+                    string.IsNullOrWhiteSpace(txtPassword.Text))
+                {
+                    lblMessage.Text = "Please enter username and password";
+                    return;
+                }
+                _userSession.UserName = txtUser.Text.Trim();
+                var result = _userService.ValidateUser(txtUser.Text.Trim().ToString(), txtPassword.Text.Trim().ToString());
+
+                if (result)
+                {
+                    this.Hide();
+                    var burnInForm = _serviceProvider.GetRequiredService<FrmProductSelection>();
+                    burnInForm.Show();
+                }
+                else
+                {
+                    lblMessage.Text = "Invalid username or password";
+                }
             }
-            _userSession.UserName = txtUser.Text.Trim();
-            var result = _userService.ValidateUser(txtUser.Text.Trim().ToString(), txtPassword.Text.Trim().ToString());
-           
-            if (result)
+            catch (Exception ex)
             {
-                this.Hide();
-                var burnInForm = _serviceProvider.GetRequiredService<FrmProductSelection>();
-                burnInForm.Show();
-            }
-            else
-            {
-                lblMessage.Text = "Invalid username or password";
+                lblMessage.Text = "An error occurred during login" + ex.Message.ToString();
+                // Log the exception as needed
             }
         }
     }
