@@ -235,6 +235,7 @@
     <Compile Include="DiskPartitionAutomation.Designer.cs">
       <DependentUpon>DiskPartitionAutomation.cs</DependentUpon>
     </Compile>
+    <Compile Include="FgDetails.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

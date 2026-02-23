@@ -61,7 +61,7 @@ namespace BurnInTestValidate
             })
             .Build();
             Application.Run(
-              host.Services.GetRequiredService<FrmLogin>()
+              host.Services.GetRequiredService<FrmBurnIntest>()
               );
 
 

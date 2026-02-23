@@ -41,22 +41,22 @@ namespace BurnInTestValidate
 
         public string lbl_app_id = string.Empty;
         public string lblstagename = string.Empty;
-        public string lblemp_id =string.Empty;
-        public string lblappver=string.Empty;
-        public string lbl_pcba_id =string.Empty;
-       
+        public string lblemp_id = string.Empty;
+        public string lblappver = string.Empty;
+        public string lbl_pcba_id = string.Empty;
+
 
         // Timers
         private System.Windows.Forms.Timer monitorTimer;      // FlaUI UI monitor timer
         private System.Windows.Forms.Timer fileMonitorTimer;  // SSDMP.txt file monitor timer
 
         // FlaUI Window reference
-        private FlaUI.Core.AutomationElements.Window mainWindow;  
+        private FlaUI.Core.AutomationElements.Window mainWindow;
 
 
         private readonly DbConnectionFactory _ConnectionString;
         public int result = 0;
-        public DataManagent (DbConnectionFactory dbConnectionFactory)
+        public DataManagent(DbConnectionFactory dbConnectionFactory)
         {
 
             _ConnectionString = dbConnectionFactory;
@@ -69,6 +69,9 @@ namespace BurnInTestValidate
                 using (SqlCommand sqlCommand = new SqlCommand("pro_passmarkhistory", sqlConnection))
                 {
                     sqlCommand.CommandType = System.Data.CommandType.StoredProcedure;
+                    sqlCommand.Parameters.AddWithValue("@FgNumber", objHistory.FgNumber);
+                    sqlCommand.Parameters.AddWithValue("@CustomerSerialNumber", objHistory.CustomerSerialNumber);
+                    sqlCommand.Parameters.AddWithValue("@PCBAID", objHistory.PCBAID);
                     sqlCommand.Parameters.AddWithValue("@DiskPartition", objHistory.DiskPartition);
                     sqlCommand.Parameters.AddWithValue("@CrystalReport", objHistory.CrystalReport);
                     sqlCommand.Parameters.AddWithValue("@read_one", objHistory.read_one);
@@ -81,6 +84,7 @@ namespace BurnInTestValidate
                     sqlCommand.Parameters.AddWithValue("@write_four", objHistory.write_four);
                     sqlCommand.Parameters.AddWithValue("@burnintest", objHistory.burnintest);
                     sqlCommand.Parameters.AddWithValue("@overall_result", objHistory.overall_result);
+                    sqlCommand.Parameters.AddWithValue("@createid", objHistory.CreatedBy);
                     sqlConnection.Open();
                     result = sqlCommand.ExecuteNonQuery();
                     sqlConnection.Close();
@@ -94,7 +98,7 @@ namespace BurnInTestValidate
             bool checkCurrStageResult = false;
             try
             {
-                var con= _ConnectionString.CreateConnection(DatabaseType.BurnIn);
+                var con = _ConnectionString.CreateConnection(DatabaseType.BurnIn);
                 if (boardonline)
                 {
                     con.Close();
@@ -153,7 +157,7 @@ namespace BurnInTestValidate
         }
 
 
-        private string SQL_Upload(string Sno, bool boardfail, string Result_Remarks)
+        public string SQL_Upload(string PcbSno, string CusSno, bool boardfail, string Result_Remarks)
         {
             var con = _ConnectionString.CreateConnection(DatabaseType.BurnIn);
             string sqluploadresult = string.Empty;
@@ -166,8 +170,8 @@ namespace BurnInTestValidate
                     "'" + lbl_app_id + "'," +
                     "'" + lblstagename + "'," +
                     "'" + infosfromboard[0] + "'," +
-                    "'" + Sno + "'," +
-                    "'" + Sno + "'," +
+                    "'" + PcbSno + "'," +
+                    "'" + CusSno + "'," +
                     "'" + (boardfail ? "FAIL" : "PASS") + "'," +
                     "'" + errordesc + "'," +
                     "'" + infosfromboard[1] + "'," +
@@ -193,13 +197,13 @@ namespace BurnInTestValidate
             catch (Exception ex)
             {
                 Update_Error_in_Server("Exception", "ERR-SQL-02", ex.Message.ToString(),
-                    "SFCS Dashboard", "PCBA:" + Sno + ",Workorder:" + lblemp_id + ",CustomerNo:" + Sno + ".");
+                    "SFCS Dashboard", "PCBA:" + PcbSno + ",Workorder:" + lblemp_id + ",CustomerNo:" + CusSno + ".");
                 //lbl_result.Text += "SFCS Dashboard Failed.";
                 //lbl_result.BackColor = Color.Red;
                 //lbl_result.ForeColor = Color.Yellow;
                 //Fill_Response_Data("SQL Report Failed. - SFCS Dashboard");
-                sqluploadresult = "Error " + "Exception" + "ERR-SQL-02"+ ex.Message.ToString() +
-                    "SFCS Dashboard"+ "PCBA:" + Sno + ",Workorder:" + lblemp_id + ",CustomerNo:" + Sno + ".";
+                sqluploadresult = "Error " + "Exception" + "ERR-SQL-02" + ex.Message.ToString() +
+                    "SFCS Dashboard" + "PCBA:" + PcbSno + ",Workorder:" + lblemp_id + ",CustomerNo:" + CusSno + ".";
             }
 
             for (int tryupdate = 1; tryupdate <= 3; tryupdate++)
@@ -216,7 +220,7 @@ namespace BurnInTestValidate
                         "Update_timestamp = FORMAT(CURRENT_TIMESTAMP,'dd-MM-yyyy HH:mm:ss.ffff'), " +
                         "Update_Machine_id = HOST_NAME(), " +
                         "Update_Emp_id = '" + lblemp_id + "' " +
-                        "WHERE PCBA_Id = '" + Sno + "'",
+                        "WHERE PCBA_Id = '" + PcbSno + "'",
                         con);
 
                     if (con.State == ConnectionState.Closed)
@@ -232,12 +236,12 @@ namespace BurnInTestValidate
                 catch (Exception ex)
                 {
                     Update_Error_in_Server("Exception", "ERR-SQL-03", ex.Message.ToString(),
-                        "SFCS Nextstage Failed", "PCBA:" + Sno + ",Workorder:" + infosfromboard[0] + ",CustomerNo:" + Sno + ".");
+                        "SFCS Nextstage Failed", "PCBA:" + PcbSno + ",Workorder:" + infosfromboard[0] + ",CustomerNo:" + CusSno + ".");
                     //lbl_result.Text += "SFCS Nextstage Failed.";
                     //lbl_result.BackColor = Color.Red;
                     //lbl_result.ForeColor = Color.Yellow;
                     //Fill_Response_Data("SFCS Next Stage Update Failed.");
-                    sqluploadresult = "Error " + "Exception" + "ERR-SQL-03" + ex.Message.ToString() + "SFCS Nextstage Failed" + "PCBA:" + Sno + ",Workorder:" + infosfromboard[0] + ",CustomerNo:" + Sno + ".";
+                    sqluploadresult = "Error " + "Exception" + "ERR-SQL-03" + ex.Message.ToString() + "SFCS Nextstage Failed" + "PCBA:" + PcbSno + ",Workorder:" + infosfromboard[0] + ",CustomerNo:" + CusSno + ".";
                 }
             }
 
@@ -245,7 +249,7 @@ namespace BurnInTestValidate
             {
                 con.Close();
 
-                SqlCommand cmd = new SqlCommand("INSERT INTO FCT VALUES('CHN1','" + lblstagename + "','" + Sno + "','" + (boardfail ? "FAIL" : "PASS") + "','" + errordesc + "',FORMAT(CURRENT_TIMESTAMP,'dd-MM-yyyy HH:mm:ss.ffff'),'" + lblemp_id + "',HOST_NAME(),'" + infosfromboard[1] + "','" + infosfromboard[0] + "','')", con);
+                SqlCommand cmd = new SqlCommand("INSERT INTO FCT VALUES('CHN1','" + lblstagename + "','" + PcbSno + "','" + (boardfail ? "FAIL" : "PASS") + "','" + errordesc + "',FORMAT(CURRENT_TIMESTAMP,'dd-MM-yyyy HH:mm:ss.ffff'),'" + lblemp_id + "',HOST_NAME(),'" + infosfromboard[1] + "','" + infosfromboard[0] + "','')", con);
                 if (con.State == ConnectionState.Closed)
                     con.Open();
                 cmd.ExecuteNonQuery();
@@ -256,7 +260,7 @@ namespace BurnInTestValidate
             catch (Exception ex)
             {
                 Update_Error_in_Server("Exception", "ERR-SQL-04", ex.Message.ToString(),
-                    "SFCS FCT Failed", "PCBA:" + Sno + ",Workorder:" + infosfromboard[0] + ",CustomerNo:" + Sno + ".");
+                    "SFCS FCT Failed", "PCBA:" + PcbSno + ",Workorder:" + infosfromboard[0] + ",CustomerNo:" + CusSno + ".");
                 //lbl_result.Text += "SFCS FCT Failed.";
                 //lbl_result.BackColor = Color.Red;
                 //lbl_result.ForeColor = Color.Yellow;
@@ -316,12 +320,12 @@ namespace BurnInTestValidate
         }
 
 
-        
+
 
         private void Update_Error_in_Server(string errortype, string errorcode, string errordesc, string errorloc, string errorremarks)
         {
             string inqry = string.Empty;
-            var con= _ConnectionString.CreateConnection(DatabaseType.BurnIn);
+            var con = _ConnectionString.CreateConnection(DatabaseType.BurnIn);
             try
             {
                 con.Close();
@@ -430,7 +434,33 @@ namespace BurnInTestValidate
         //    Application.DoEvents();
         //}
 
+        public FgDetails GetFgDetails(int productId, string cusNumber)
+        {
+            FgDetails details = null;
+            using (SqlConnection sqlConnection = _ConnectionString.CreateConnection(Program.DatabaseType.Reporting))
+            {
+                using (SqlCommand sqlCommand = new SqlCommand("Pro_getFgDetails", sqlConnection))
+                {
+                    sqlCommand.CommandType = System.Data.CommandType.StoredProcedure;
+                    sqlCommand.Parameters.AddWithValue("@producttype", productId);
+                    sqlCommand.Parameters.AddWithValue("@customerserialnumber", cusNumber);
+                    sqlConnection.Open();
+                    using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            details = new FgDetails
+                            {
+                                FgName = reader["FgNumber"].ToString(),
+                                ProductType = reader["PCBSerialNo"].ToString(),
+                            };
+                        }
+                    }
+                    sqlConnection.Close();
+                }
+            }
+            return details;
 
-      
+        }
     }
 }

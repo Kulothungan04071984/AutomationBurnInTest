@@ -35,5 +35,14 @@ namespace BurnInTestValidate
             return _repo.ValidateUser(username, password);
         }
 
+        public FgDetails GetFgDetails(int productId, string cusNumber)
+        {
+            return _repo.GetFgDetails(productId, cusNumber);
+        }
+
+        public string SQL_Upload(string PcbSno, string CusSno, bool boardfail, string Result_Remarks)
+        {
+            return _repo.SQL_Upload(PcbSno, CusSno, boardfail, Result_Remarks);
+        }
     }
 }

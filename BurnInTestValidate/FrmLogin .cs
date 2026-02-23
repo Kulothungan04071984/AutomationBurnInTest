@@ -160,7 +160,18 @@ namespace BurnInTestValidate
                 if (result)
                 {
                     this.Hide();
+                    // var burnInForm = _serviceProvider.GetRequiredService<FrmProductSelection>();
+                    //string customer = string.Empty;
+                    //string productType = string.Empty;
+                    //string fgName = string.Empty;
                     var burnInForm = _serviceProvider.GetRequiredService<FrmProductSelection>();
+        //            var burnInForm = ActivatorUtilities.CreateInstance<FrmBurnIntest>(
+        //    _serviceProvider,
+        //    customer,
+        //    productType,
+        //    fgName
+
+        //);
                     burnInForm.Show();
                 }
                 else

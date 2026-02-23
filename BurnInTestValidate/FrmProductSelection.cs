@@ -163,12 +163,14 @@ namespace BurnInTestValidate
             }
             string customer = cmbCustomer.Text.ToString();
             string productType = cmbProductType.Text.ToString();
+            int productTypeId = Convert.ToInt32(cmbProductType.SelectedValue);
             string fgName = cmbFGName.Text.ToString();
             //var burnInForm = _serviceProvider.GetRequiredService<FrmProductSelection>();
             var burnInFormshow = ActivatorUtilities.CreateInstance<FrmBurnIntest>(
     _serviceProvider,
     customer,
     productType,
+    productTypeId,
     fgName
 
 );

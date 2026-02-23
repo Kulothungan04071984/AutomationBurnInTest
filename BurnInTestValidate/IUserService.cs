@@ -14,6 +14,8 @@ namespace BurnInTestValidate
         DataTable GetFGNames(int productTypeId);
         bool Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true);
         bool ValidateUser(string username, string password);
+        FgDetails GetFgDetails(int productId, string cusNumber);
+        string SQL_Upload(string PcbSno, string CusSno, bool boardfail, string Result_Remarks);
     }
            
 }
