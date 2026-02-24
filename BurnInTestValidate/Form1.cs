@@ -38,8 +38,10 @@ namespace BurnInTestValidate
    
     public partial class FrmBurnIntest : Form
     {
-        private System.Windows.Forms.Button btnStart;
-        private System.Windows.Forms.TextBox txtCustomer;
+        public System.Windows.Forms.Button btnStart;
+        public System.Windows.Forms.TextBox txtCustomer;
+        public System.Windows.Forms.Label lblFgName;
+        public System.Windows.Forms.Label lblPCBAID;
         private System.Windows.Forms.Timer barcodeTimer = new System.Windows.Forms.Timer();
         private RichTextBox _rtbLog;
         public IUserService _userService;
@@ -97,17 +99,17 @@ namespace BurnInTestValidate
             };
             //Label lblUser = CreateInfoLabel($"User : {_session.UserName}", 0);
             //Label lblUser = CreateInfoLabel($"User : Admin", 0);
-            txtCustomer = CreateInfoTextBox("", 20);
+            txtCustomer = CreateInfoTextBox("", 10);
             Label lblProduct = CreateInfoLabel(
-                $"Product Type :  M.2 ", 60);
-            Label lblFG = CreateInfoLabel($"FG Name : ", 80);
-            //Label lblserialNo = CreateInfoLabel($"Serial No : 123456", 80);
+                $"Product Type :  M.2 ", 40);
+            lblFgName = CreateInfoLabel($"FG Name : ", 60);
+            lblPCBAID = CreateInfoLabel($"PCBAID No : ", 80);
 
            // infoPanel.Controls.Add(lblUser);
             infoPanel.Controls.Add(txtCustomer);
             infoPanel.Controls.Add(lblProduct);
-            infoPanel.Controls.Add(lblFG);
-            //infoPanel.Controls.Add(lblserialNo);
+            infoPanel.Controls.Add(lblFgName);
+            infoPanel.Controls.Add(lblPCBAID);
 
             this.Controls.Add(infoPanel);
             // Start Button
@@ -119,7 +121,8 @@ namespace BurnInTestValidate
                 Location = new System.Drawing.Point(500, 15),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Visible = false
             };
             btnStart.FlatAppearance.BorderSize = 0;
             btnStart.Click += btnStart_Click;
@@ -210,8 +213,10 @@ namespace BurnInTestValidate
                 if (fgDetails != null)
                 {
                     _customer = fgDetails.Customer;
-                    _pcbSno = fgDetails.PCBAID;
+                    lblPCBAID.Text = _pcbSno = fgDetails.PCBAID;
+                    lblFgName.Text = _fgName = fgDetails.FgName;
                     checkSNN = _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
+                    Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno);
                 }
                 else
                 {
@@ -251,6 +256,7 @@ namespace BurnInTestValidate
             {
                 writeErrorMessage("Serial No File Not Found", @"D:\\hwi_822\\hwi_822\\");
                 Log(log,"Serial No File Not Found");
+                
                _userService.SQL_Upload(_pcbSno, _customer, true, "Serial No File Not Found");
                 return;
             }
@@ -2091,7 +2097,8 @@ cf.ByControlType(ControlType.Window)
                                 if (_fgDetails != null  )
                                 {
                                     _customer = _fgDetails.Customer;
-                                    _pcbSno = _fgDetails.PCBAID;
+                                     lblPCBAID.Text = _pcbSno = _fgDetails.PCBAID;
+                                    lblFgName.Text = _fgName = _fgDetails.FgName;
                                     checkSN = _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
                                 }
                                 else { 

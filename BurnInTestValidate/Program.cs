@@ -60,6 +60,7 @@ namespace BurnInTestValidate
                 services.AddSingleton<UserSession>();
             })
             .Build();
+            Startup.AddToWindowsStartup();
             Application.Run(
               host.Services.GetRequiredService<FrmBurnIntest>()
               );
