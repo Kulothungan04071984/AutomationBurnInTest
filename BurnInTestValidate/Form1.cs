@@ -38,8 +38,8 @@ namespace BurnInTestValidate
    
     public partial class FrmBurnIntest : Form
     {
-        public System.Windows.Forms.Button btnStart;
-        public System.Windows.Forms.TextBox txtCustomer;
+        private System.Windows.Forms.Button btnStart;
+        private System.Windows.Forms.TextBox txtCustomer;
         private System.Windows.Forms.Timer barcodeTimer = new System.Windows.Forms.Timer();
         public RichTextBox _rtbLog;
         public System.Windows.Forms.Label lblFG;
@@ -216,6 +216,7 @@ namespace BurnInTestValidate
                     lblserialNoPCBA.Text =  _pcbSno = fgDetails.PCBAID;
                     lblFG.Text = fgDetails.FgName;
                     checkSNN = _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
+                    Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno);
                 }
                 else
                 {
@@ -255,6 +256,7 @@ namespace BurnInTestValidate
             {
                 writeErrorMessage("Serial No File Not Found", @"D:\\hwi_822\\hwi_822\\");
                 Log(log,"Serial No File Not Found");
+                
                _userService.SQL_Upload(_pcbSno, _customer, true, "Serial No File Not Found");
                 return;
             }
@@ -2095,7 +2097,8 @@ cf.ByControlType(ControlType.Window)
                                 if (_fgDetails != null  )
                                 {
                                     _customer = _fgDetails.Customer;
-                                    _pcbSno = _fgDetails.PCBAID;
+                                     lblPCBAID.Text = _pcbSno = _fgDetails.PCBAID;
+                                    lblFgName.Text = _fgName = _fgDetails.FgName;
                                     checkSN = _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
                                 }
                                 else { 
