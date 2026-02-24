@@ -121,7 +121,6 @@ namespace BurnInTestValidate
                 Location = new System.Drawing.Point(500, 15),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
-                Visible = false,
                 FlatStyle = FlatStyle.Flat
             };
             btnStart.FlatAppearance.BorderSize = 0;
@@ -251,7 +250,8 @@ namespace BurnInTestValidate
             Log(log, " Customerb Serial No :" + txtCustomer.Text.ToString(), Color.Green);
             string serialFilePath = ConfigurationManager.AppSettings["HWPath"].ToString();
             //var chkserialNo = await getSerialNo(serialFilePath, log);
-            var chkserialNo = await Task.Run(() => checkCustomerSerialNo(txtCustomer.Text.ToString(), log));
+            string customerSerialNo = txtCustomer.Text.ToString();
+            var chkserialNo = await Task.Run(() => checkCustomerSerialNo(customerSerialNo, log));
             if (chkserialNo == false)
             {
                 writeErrorMessage("Serial No File Not Found", @"D:\\hwi_822\\hwi_822\\");
