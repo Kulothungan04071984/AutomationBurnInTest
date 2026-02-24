@@ -2097,8 +2097,8 @@ cf.ByControlType(ControlType.Window)
                                 if (_fgDetails != null  )
                                 {
                                     _customer = _fgDetails.Customer;
-                                     lblPCBAID.Text = _pcbSno = _fgDetails.PCBAID;
-                                    lblFgName.Text = _fgName = _fgDetails.FgName;
+                                     _pcbSno = _fgDetails.PCBAID;
+                                    _fgName = _fgDetails.FgName;
                                     checkSN = _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
                                 }
                                 else { 
