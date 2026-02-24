@@ -38,10 +38,12 @@ namespace BurnInTestValidate
    
     public partial class FrmBurnIntest : Form
     {
-        private System.Windows.Forms.Button btnStart;
-        private System.Windows.Forms.TextBox txtCustomer;
+        public System.Windows.Forms.Button btnStart;
+        public System.Windows.Forms.TextBox txtCustomer;
         private System.Windows.Forms.Timer barcodeTimer = new System.Windows.Forms.Timer();
-        private RichTextBox _rtbLog;
+        public RichTextBox _rtbLog;
+        public System.Windows.Forms.Label lblFG;
+        public System.Windows.Forms.Label lblserialNoPCBA;
         public IUserService _userService;
         PassmarkHistory payhistory = new PassmarkHistory();
         string exePath = string.Empty;
@@ -97,17 +99,17 @@ namespace BurnInTestValidate
             };
             //Label lblUser = CreateInfoLabel($"User : {_session.UserName}", 0);
             //Label lblUser = CreateInfoLabel($"User : Admin", 0);
-            txtCustomer = CreateInfoTextBox("", 20);
+            txtCustomer = CreateInfoTextBox("", 15);
             Label lblProduct = CreateInfoLabel(
-                $"Product Type :  M.2 ", 60);
-            Label lblFG = CreateInfoLabel($"FG Name : ", 80);
-            //Label lblserialNo = CreateInfoLabel($"Serial No : 123456", 80);
+                $"Product Type :  M.2 ", 40);
+             lblFG = CreateInfoLabel($"FG Name : ", 60);
+             lblserialNoPCBA = CreateInfoLabel($"PCBA ID : ", 80);
 
            // infoPanel.Controls.Add(lblUser);
             infoPanel.Controls.Add(txtCustomer);
             infoPanel.Controls.Add(lblProduct);
             infoPanel.Controls.Add(lblFG);
-            //infoPanel.Controls.Add(lblserialNo);
+            infoPanel.Controls.Add(lblserialNoPCBA);
 
             this.Controls.Add(infoPanel);
             // Start Button
@@ -119,6 +121,7 @@ namespace BurnInTestValidate
                 Location = new System.Drawing.Point(500, 15),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
+                Visible = false,
                 FlatStyle = FlatStyle.Flat
             };
             btnStart.FlatAppearance.BorderSize = 0;
@@ -210,7 +213,8 @@ namespace BurnInTestValidate
                 if (fgDetails != null)
                 {
                     _customer = fgDetails.Customer;
-                    _pcbSno = fgDetails.PCBAID;
+                    lblserialNoPCBA.Text =  _pcbSno = fgDetails.PCBAID;
+                    lblFG.Text = fgDetails.FgName;
                     checkSNN = _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
                 }
                 else
