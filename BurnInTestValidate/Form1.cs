@@ -22,6 +22,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+//using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Ink;
@@ -47,6 +48,7 @@ namespace BurnInTestValidate
         public IUserService _userService;
         PassmarkHistory payhistory = new PassmarkHistory();
         string exePath = string.Empty;
+        public string[] stages = { "", "" };
         int PartitionCount = 0;
         popupform ppfrm = new popupform();
         Blink frmblink = new Blink();
@@ -204,6 +206,18 @@ namespace BurnInTestValidate
             }
         }
 
+        private void UpdateUI(string fgName,string pcbaId)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateUI(fgName,pcbaId)));
+                return;
+            }
+
+            lblFG.Text ="FG Name :" + fgName;
+            lblserialNoPCBA.Text ="PCBAID :" + pcbaId;
+        }
+
         public bool checkCustomerSerialNo(string customerSerialNo, RichTextBox log)
         {
             try
@@ -212,9 +226,22 @@ namespace BurnInTestValidate
                 if (fgDetails != null)
                 {
                     _customer = fgDetails.Customer;
-                    lblserialNoPCBA.Text =  _pcbSno = fgDetails.PCBAID;
-                    lblFG.Text = fgDetails.FgName;
-                    checkSNN = _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
+                    _pcbSno = fgDetails.PCBAID;
+                    _fgName = fgDetails.FgName;
+                    UpdateUI(_fgName, _pcbSno);
+                    int stageid = 0;
+                    string stageName = string.Empty;
+                   var stage = _userService.startchecksfcs(fgDetails.FgName);
+
+                    if (stage != null)
+                    {
+                        stages= stage;
+                        stageid = Convert.ToInt32(stage[0]);
+                         stageName = stage[1];
+                    }
+                     //payhistory.StageId = stageid;
+                     //payhistory.StageName = stageName;
+                    checkSNN = _userService.Check_Curr_Stage(_pcbSno, stageid.ToString(), stageName, true);
                     Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno);
                 }
                 else
@@ -257,7 +284,7 @@ namespace BurnInTestValidate
                 writeErrorMessage("Serial No File Not Found", @"D:\\hwi_822\\hwi_822\\");
                 Log(log,"Serial No File Not Found");
                 
-               _userService.SQL_Upload(_pcbSno, _customer, true, "Serial No File Not Found");
+               _userService.SQL_Upload(_pcbSno, _customer, true, "Serial No File Not Found",stages);
                 return;
             }
           
@@ -269,7 +296,7 @@ namespace BurnInTestValidate
             {
                 writeErrorMessage(ex.Message.ToString(), "btnStart_Click");
                 Log(log, $"ERROR: {ex.Message}", System.Drawing.Color.Red);
-                _userService.SQL_Upload(_pcbSno, _customer, true, ex.Message.ToString());
+                _userService.SQL_Upload(_pcbSno, _customer, true, ex.Message.ToString(),stages);
             }
             finally
             {
@@ -403,7 +430,7 @@ exit";
                 Log(log, $"Error: {ex.Message}\r\n", Color.Red);
                 writeErrorMessage($"Error: {ex.Message}\r\n","Error");
                 payhistory.DiskPartition = "Fail";
-                _userService.SQL_Upload(_pcbSno, _customer, true, "Disk Partion Fail");
+                _userService.SQL_Upload(_pcbSno, _customer, true, "Disk Partion Fail",stages);  
                 return "false";
             }
         }
@@ -425,7 +452,7 @@ exit";
                 writeErrorMessage("File path Not Exists -", exePath.ToString());
                 Log(log, $"EXE not found: {exePath}", System.Drawing.Color.Red);
                 payhistory.burnintest ="Fail";
-                _userService.SQL_Upload(_pcbSno, _customer, true, "File path Not Exists");
+                _userService.SQL_Upload(_pcbSno, _customer, true, "File path Not Exists", stages);
                 return;
             }
             writeErrorMessage("File path Exists -", exePath.ToString());
@@ -458,7 +485,7 @@ exit";
                         Log(log, "Crystal DiskMark Not Found");
                         writeErrorMessage("Error -", "Crystal DiskMark Not Found");
                         payhistory.CrystalReport = "Fail";
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "Crystal DiskMark Not Found");
+                        _userService.SQL_Upload(_pcbSno, _customer, true, "Crystal DiskMark Not Found", stages);
                         return;
                     }
                     app = LaunchWithAdmin(Crystalpath);
@@ -476,7 +503,7 @@ cf.ByControlType(ControlType.Window)
                         payhistory.CrystalReport = "Fail";
                         //popup.SetMessage("CrystalDiskMark Window Not Found!");
                         //popup.Show();
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "CrystalDiskMark Window Not Found");
+                        _userService.SQL_Upload(_pcbSno, _customer, true, "CrystalDiskMark Window Not Found", stages);
                         ppfrm.AddText("ERROR: ", Color.Red, true);
                         ppfrm.AddText("CrystalDiskMark Window Not Found!", Color.Black);
                         ppfrm.ShowDialog();
@@ -496,7 +523,7 @@ cf.ByControlType(ControlType.Window)
                     {
                         Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId}' not found.");
                         payhistory.CrystalReport = "Fail";
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "ComboBox with AutomationId");
+                        _userService.SQL_Upload(_pcbSno, _customer, true, "ComboBox with AutomationId", stages);
                         return;
                     }
 
@@ -546,7 +573,7 @@ cf.ByControlType(ControlType.Window)
                     {
                         Log(log, "D: Drive Not showing in crystal report.");
                         writeErrorMessage("Error", "D: Drive Issue");
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "D: Drive Not showing in crystal report.");
+                        _userService.SQL_Upload(_pcbSno, _customer, true, "D: Drive Not showing in crystal report.", stages);
                         return;
                     }
 
@@ -554,7 +581,7 @@ cf.ByControlType(ControlType.Window)
                     if (btnAll == null)
                     {
                         Log(log, "Button All Not Found");
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "Button All Not Found");
+                        _userService.SQL_Upload(_pcbSno, _customer, true, "Button All Not Found", stages);
                         return;
                     }
                     btnAll.Invoke();
@@ -729,7 +756,7 @@ cf.ByControlType(ControlType.Window)
                         // ❌ FAIL case
                         if (readValue == "0")
                         {
-                            _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read");
+                            _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
                             Log(log, "Crystal DiskMark Fail " + readValue);
                             writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
                             payhistory.CrystalReport = "Fail";
@@ -742,7 +769,7 @@ cf.ByControlType(ControlType.Window)
                         }
                         if ((automationId == "1009" || automationId == "1014") && Convert.ToDecimal(readValue) < 1000)
                         {
-                            _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read");
+                            _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
                             Log(log, "Crystal DiskMark Fail " + readValue);
                             writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
                             payhistory.CrystalReport = "Fail";
@@ -940,7 +967,7 @@ cf.ByControlType(ControlType.Window)
                         Log(log, "Main window not found", System.Drawing.Color.Red);
                         writeErrorMessage("Main window not found", "Error");
                         payhistory.burnintest = "Fail";
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "Main window not found");
+                        _userService.SQL_Upload(_pcbSno, _customer, true, "Main window not found", stages);
                         return;
                     }
 
@@ -953,7 +980,7 @@ cf.ByControlType(ControlType.Window)
                     {
                         Log(log, "Menu bar not found", System.Drawing.Color.Red);
                         payhistory.burnintest = "Fail";
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "Menu bar not found");
+                        _userService.SQL_Upload(_pcbSno, _customer, true, "Menu bar not found", stages);
                         return;
                     }
                     System.Threading.Thread.Sleep(1500);
@@ -962,7 +989,7 @@ cf.ByControlType(ControlType.Window)
                     {
                         Log(log, "Configuration menu not found", System.Drawing.Color.Red);
                         payhistory.burnintest = "Fail";
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "Configuration menu not found");
+                        _userService.SQL_Upload(_pcbSno, _customer, true, "Configuration menu not found", stages);
                         return;
                     }
                     configMenu?.Click();
@@ -997,7 +1024,7 @@ cf.ByControlType(ControlType.Window)
                             {
                                 Log(log, "BurnInTest Preferences window not found.");
                                 payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "BurnInTest Preferences window not found.");
+                                _userService.SQL_Upload(_pcbSno, _customer, true, "BurnInTest Preferences window not found.", stages);
                                 return;
                             }
                             prefWindow.Focus();
@@ -1011,7 +1038,7 @@ cf.ByControlType(ControlType.Window)
                             {
                                 Log(log, "Checkbox not found (check AutomationId-)" + checkbox.AutomationId + "-" + checkbox.Name);
                                 payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "Checkbox not found (check AutomationId-).");
+                                _userService.SQL_Upload(_pcbSno, _customer, true, "Checkbox not found (check AutomationId-).", stages);
                                 return;
                             }
                             checkbox.IsChecked = true;
@@ -1040,7 +1067,7 @@ cf.ByControlType(ControlType.Window)
                                     {
                                         Log(log, "ListView C: not found .");
                                         payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "ListView C: not found .");
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "ListView C: not found .", stages);
                                         return;
                                     }
                                     Log(log, "ListView C: found");
@@ -1059,7 +1086,7 @@ cf.ByControlType(ControlType.Window)
                                     {
                                         Log(log, "ListView D: not found .");
                                         payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "ListView D: not found .");
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "ListView D: not found .", stages);
                                         return;
                                     }
                                     Log(log, "ListView D: found");
@@ -1069,7 +1096,7 @@ cf.ByControlType(ControlType.Window)
                                     {
                                         Log(log, "File Size Box Not Found", System.Drawing.Color.Red);
                                         payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "File Size Box Not Found");
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "File Size Box Not Found", stages);
                                         return;
                                     }
                                     System.Threading.Thread.Sleep(500);
@@ -1090,7 +1117,7 @@ cf.ByControlType(ControlType.Window)
                                     {
                                         Log(log, "D: Block Size Box Not Found", System.Drawing.Color.Red);
                                         payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "D: Block Size Box Not Found");
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "D: Block Size Box Not Found", stages);
                                         return;
                                     }
                                     var combod = comboElement_D.AsComboBox();
@@ -1106,7 +1133,7 @@ cf.ByControlType(ControlType.Window)
                                     {
                                         Log(log, "D:Block Size value 256 Not selectd" + combod.Value.ToString());
                                         payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "D:Block Size value 256 Not selectd");
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "D:Block Size value 256 Not selectd", stages);
                                         return;
                                     }
                                     Log(log, " D: Block Size value Selected" + combod.Value.ToString());
@@ -1122,7 +1149,7 @@ cf.ByControlType(ControlType.Window)
                                     {
                                         Log(log, "ListView E: not found .");
                                         payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "ListView E: not found .");
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "ListView E: not found .", stages);
                                         return;
                                     }
                                     Log(log, "ListView E: found");
@@ -1133,7 +1160,7 @@ cf.ByControlType(ControlType.Window)
                                     {
                                         Log(log, "E:File Size Box Not Found", System.Drawing.Color.Red);
                                         payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "E:File Size Box Not Found");
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "E:File Size Box Not Found", stages);
                                         return;
                                     }
 
@@ -1154,7 +1181,7 @@ cf.ByControlType(ControlType.Window)
                                     {
                                         Log(log, "E: Block Size Box Not Found", System.Drawing.Color.Red);
                                         payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "E: Block Size Box Not Found");
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "E: Block Size Box Not Found", stages);
                                         return;
                                     }
 
@@ -1172,7 +1199,7 @@ cf.ByControlType(ControlType.Window)
                                     {
                                         Log(log, "E Block Size value 256 Not selectd" + comboe.Value.ToString());
                                         payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "E Block Size value 256 Not selectd");
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "E Block Size value 256 Not selectd", stages);
                                         return;
                                     }
                                     Log(log, " E: Block Size value Selected" + comboe.Value.ToString());
@@ -1327,7 +1354,7 @@ cf.ByControlType(ControlType.Window)
                             {
                                 Console.WriteLine("warning Getting ready to run Burn in tests window not found.");
                                 payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "warning Getting ready to run Burn in tests window not found.");
+                                _userService.SQL_Upload(_pcbSno, _customer, true, "warning Getting ready to run Burn in tests window not found.", stages);
                                 return;
                             }
 
@@ -1684,7 +1711,7 @@ cf.ByControlType(ControlType.Window)
                             //    }
 
                             //Testing
-                            _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Completed.");
+                            _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Completed.", stages);
                             payhistory.overall_result = "Pass";
                             ppfrm.AddText("SUCCESS: ", Color.Green, true);
                             ppfrm.AddText("Passmark Test Completed.\n", Color.Black);
@@ -1744,7 +1771,7 @@ cf.ByControlType(ControlType.Window)
                             writeErrorMessage(ex.Message.ToString(), "Crystal DiskMark");
                             ppfrm.AddText("ERROR: ", Color.Red, true);
                             ppfrm.AddText(ex.Message.ToString(), Color.Black);
-                            _userService.SQL_Upload(_pcbSno, _customer, true, ex.Message.ToString());
+                            _userService.SQL_Upload(_pcbSno, _customer, true, ex.Message.ToString(),stages);
                             ppfrm.ShowDialog();
                             ppfrm.Focus();
                             ppfrm.Activate();

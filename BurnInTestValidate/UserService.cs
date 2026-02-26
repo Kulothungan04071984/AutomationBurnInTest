@@ -40,9 +40,14 @@ namespace BurnInTestValidate
             return _repo.GetFgDetails(productId, cusNumber);
         }
 
-        public string SQL_Upload(string PcbSno, string CusSno, bool boardfail, string Result_Remarks)
+        public string SQL_Upload(string PcbSno, string CusSno, bool boardfail, string Result_Remarks, string[] stages)
         {
-            return _repo.SQL_Upload(PcbSno, CusSno, boardfail, Result_Remarks);
+            return _repo.SQL_Upload(PcbSno, CusSno, boardfail, Result_Remarks , stages);
+        }
+
+        public string[] startchecksfcs(string FgNumber)
+        {
+            return _repo.startchecksfcs(FgNumber);
         }
     }
 }

@@ -157,7 +157,7 @@ namespace BurnInTestValidate
         }
 
 
-        public string SQL_Upload(string PcbSno, string CusSno, bool boardfail, string Result_Remarks)
+        public string SQL_Upload(string PcbSno, string CusSno, bool boardfail, string Result_Remarks , string[] stage)
         {
             var con = _ConnectionString.CreateConnection(DatabaseType.BurnIn);
             string sqluploadresult = string.Empty;
@@ -214,8 +214,8 @@ namespace BurnInTestValidate
 
                     SqlCommand cmd = new SqlCommand(
                         "UPDATE PCBA_NextStage SET " +
-                        "Next_Stage_Id = '" + (boardfail ? reworkidinfo[0] : nextidinfo[0]) + "', " +
-                        "Next_Stage_Name = '" + (boardfail ? reworkidinfo[1] : nextidinfo[1]) + "', " +
+                        "Next_Stage_Id = '" + (boardfail ? reworkidinfo[0] : stage[0]) + "', " +
+                        "Next_Stage_Name = '" + (boardfail ? reworkidinfo[1] : stage[1]) + "', " +
                         "Previous_Stage = '" + lblstagename + "', " +
                         "Update_timestamp = FORMAT(CURRENT_TIMESTAMP,'dd-MM-yyyy HH:mm:ss.ffff'), " +
                         "Update_Machine_id = HOST_NAME(), " +
@@ -230,7 +230,7 @@ namespace BurnInTestValidate
                     con.Close();
                     //Fill_Response_Data("Next Stage : " + (boardfail ? reworkidinfo[1] : nextidinfo[1]));
                     //Fill_Response_Data("SFCS Next Stage Update Success.");
-                    sqluploadresult = "SFCS Next Stage Update Success." + "Next Stage : " + (boardfail ? reworkidinfo[1] : nextidinfo[1]);
+                    sqluploadresult = "SFCS Next Stage Update Success." + "Next Stage : " + (boardfail ? reworkidinfo[1] : stage[1]);
                     break;
                 }
                 catch (Exception ex)
@@ -321,7 +321,67 @@ namespace BurnInTestValidate
 
 
 
+        public string[] startchecksfcs(string FgNumber)
+        {
+            try
+            {
+                var SFCS_db = _ConnectionString.CreateConnection(DatabaseType.BurnIn);
+                if (SFCS_db.State == ConnectionState.Open)
+                    SFCS_db.Close();
 
+                SqlCommand cmd = new SqlCommand(
+                    "SELECT * FROM RoutingStages WHERE FG = '" + FgNumber + "'",
+                    SFCS_db);
+
+                if (SFCS_db.State == ConnectionState.Closed)
+                    SFCS_db.Open();
+
+                SqlDataReader sdr = cmd.ExecuteReader();
+
+                if (sdr.Read())
+                {
+                    try
+                    {
+                        string[] stages = sdr["Stages"].ToString().Split(',');
+                        int index = Array.IndexOf(stages, "262");
+
+                        if (index >= 0 && index < stages.Length - 1)
+                            nextidinfo[0] = stages[index + 1];
+                    }
+                    catch (Exception)
+                    {
+                        // ignored (same as VB empty catch)
+                    }
+                }
+
+                sdr.Close();
+                SFCS_db.Close();
+
+                string cmd1 = "SELECT App_ID, Application_Name FROM App_ver WHERE App_ID = '" + nextidinfo[0] + "'";
+                SqlDataAdapter da1 = new SqlDataAdapter(cmd1, SFCS_db);
+                DataSet ds1 = new DataSet();
+                da1.Fill(ds1, "app_name");
+
+                if (ds1.Tables[0].Rows.Count > 0)
+                {
+                    nextidinfo[1] = ds1.Tables[0].Rows[0][1].ToString();
+                }
+
+                SFCS_db.Close();
+
+                //Fill_Response_Data("SFCS Next Stage : " + nextidinfo[0] + "|" + nextidinfo[1]);
+            }
+            catch (Exception ex)
+            {
+                //MessageBox.Show(ex.Message.ToString(),
+                //                "Exception in Fetching Next Stage",
+                //                MessageBoxButtons.OK,
+                //                MessageBoxIcon.Information);
+
+                return nextidinfo;   // equivalent to Exit Sub
+            }
+            return nextidinfo;
+        }
         private void Update_Error_in_Server(string errortype, string errorcode, string errordesc, string errorloc, string errorremarks)
         {
             string inqry = string.Empty;
