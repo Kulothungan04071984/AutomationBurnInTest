@@ -229,7 +229,7 @@ namespace BurnInTestValidate
                 if (fgDetails != null)
                 {
                     _customer = customerSerialNo;
-                    _pcbSno = fgDetails.PCBAID;
+                    _pcbSno = fgDetails.ProductType;
                     _fgName = fgDetails.FgName;
                     UpdateUI(_fgName, _pcbSno);
                     int stageid = 0;
