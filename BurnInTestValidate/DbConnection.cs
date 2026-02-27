@@ -65,7 +65,7 @@ namespace BurnInTestValidate
 
         public int inserthistory(PassmarkHistory objHistory)
         {
-            using (SqlConnection sqlConnection = _ConnectionString.CreateConnection(Program.DatabaseType.BurnIn))
+            using (SqlConnection sqlConnection = _ConnectionString.CreateConnection(Program.DatabaseType.Master))
             {
                 using (SqlCommand sqlCommand = new SqlCommand("pro_passmarkhistory", sqlConnection))
                 {
