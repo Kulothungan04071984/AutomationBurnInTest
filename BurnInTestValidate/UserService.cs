@@ -25,7 +25,7 @@ namespace BurnInTestValidate
         public DataTable GetProductTypes() => _repo.GetProductTypes();
         public DataTable GetFGNames(int productTypeId) => _repo.GetFGNames(productTypeId);
 
-        public bool Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
+        public Dictionary<bool, int> Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
         {
             return _repo.Check_Curr_Stage(serialno, app_id, stage, boardonline);
         }

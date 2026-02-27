@@ -44,7 +44,8 @@ namespace BurnInTestValidate
         public string lblemp_id = string.Empty;
         public string lblappver = string.Empty;
         public string lbl_pcba_id = string.Empty;
-
+        public int boardfailcount = 0;
+         SqlConnection SFCS_db;
 
         // Timers
         private System.Windows.Forms.Timer monitorTimer;      // FlaUI UI monitor timer
@@ -92,10 +93,12 @@ namespace BurnInTestValidate
             }
             return result;
         }
-
-        public bool Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
+         
+        public Dictionary<bool,int> Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
         {
             bool checkCurrStageResult = false;
+
+            Dictionary<bool, int> result = new Dictionary<bool, int>();
             try
             {
                 var con = _ConnectionString.CreateConnection(DatabaseType.BurnIn);
@@ -123,6 +126,8 @@ namespace BurnInTestValidate
                                 {
                                     con.Close();
                                     checkCurrStageResult = true;
+                                   FailCountCheck(serialno, infosfromboard[0], infosfromboard[1],  stage);
+
                                 }
                                 else
                                 {
@@ -146,21 +151,66 @@ namespace BurnInTestValidate
                 {
                     checkCurrStageResult = true;
                 }
+                result.Add(checkCurrStageResult, boardfailcount);
 
-                return checkCurrStageResult;
+                return result;
             }
             catch (Exception ex)
             {
                 checkCurrStageResult = false;
-                return checkCurrStageResult;
+                return result;
             }
         }
 
+        public void FailCountCheck(string pcbaid,string workorderno, string reworkcount,string stage)
+        {
+            SFCS_db= _ConnectionString.CreateConnection(DatabaseType.BurnIn);
+            try {
+                boardfailcount = 0;
+
+                using (SqlCommand countCmd = new SqlCommand(
+                    "SELECT COUNT(TEST) FROM TESTINGFAILCOUNTCHECK_ESSENCORE (NOLOCK) " +
+                    "WHERE PCBAID = @pcbaid AND WORKORDER = @wo AND RW = @rw AND TEST = @test",
+                    SFCS_db))
+                {
+                    countCmd.Parameters.Add("@pcbaid", SqlDbType.VarChar).Value = pcbaid;
+                    countCmd.Parameters.Add("@wo", SqlDbType.VarChar).Value = workorderno;
+                    countCmd.Parameters.Add("@rw", SqlDbType.Int).Value = 
+                        string.IsNullOrEmpty(reworkcount.ToString()) ? 0 : Convert.ToInt32(reworkcount.ToString());
+                    countCmd.Parameters.Add("@test", SqlDbType.VarChar).Value = stage;
+
+                    SFCS_db.Open();
+
+                    object result = countCmd.ExecuteScalar();
+
+                    if (result != null && result != DBNull.Value)
+                        boardfailcount = (int)Convert.ToInt64(result);
+
+                    SFCS_db.Close();
+                }
+
+                //lbl_try.Text = (boardfailcount + 1).ToString();
+               
+
+               
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+               
+            }
+        }
 
         public string SQL_Upload(string PcbSno, string CusSno, bool boardfail, string Result_Remarks , string[] stage)
         {
             var con = _ConnectionString.CreateConnection(DatabaseType.BurnIn);
             string sqluploadresult = string.Empty;
+            if (stage.Length > 1)
+            {
+                lbl_app_id= stage[0].ToString();
+                lblstagename = stage[1].ToString();
+            }
+           
             try
             {
                 con.Close();
@@ -172,6 +222,7 @@ namespace BurnInTestValidate
                     "'" + infosfromboard[0] + "'," +
                     "'" + PcbSno + "'," +
                     "'" + CusSno + "'," +
+
                     "'" + (boardfail ? "FAIL" : "PASS") + "'," +
                     "'" + errordesc + "'," +
                     "'" + infosfromboard[1] + "'," +
@@ -214,8 +265,8 @@ namespace BurnInTestValidate
 
                     SqlCommand cmd = new SqlCommand(
                         "UPDATE PCBA_NextStage SET " +
-                        "Next_Stage_Id = '" + (boardfail ? reworkidinfo[0] : stage[0]) + "', " +
-                        "Next_Stage_Name = '" + (boardfail ? reworkidinfo[1] : stage[1]) + "', " +
+                        "Next_Stage_Id = '" + (boardfail ? (boardfailcount > 1 ? reworkidinfo[0] : lbl_app_id) : nextidinfo[0]) + "', " +
+                        "Next_Stage_Name = '" + (boardfail ? (boardfailcount > 1 ? reworkidinfo[1] : lblstagename) : nextidinfo[1]) + "', " +
                         "Previous_Stage = '" + lblstagename + "', " +
                         "Update_timestamp = FORMAT(CURRENT_TIMESTAMP,'dd-MM-yyyy HH:mm:ss.ffff'), " +
                         "Update_Machine_id = HOST_NAME(), " +

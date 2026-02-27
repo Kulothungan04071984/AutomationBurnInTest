@@ -42,6 +42,7 @@ namespace BurnInTestValidate
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.TextBox txtCustomer;
         private System.Windows.Forms.Timer barcodeTimer = new System.Windows.Forms.Timer();
+        public System.Windows.Forms.Label lblCount;
         public RichTextBox _rtbLog;
         public System.Windows.Forms.Label lblFG;
         public System.Windows.Forms.Label lblserialNoPCBA;
@@ -100,7 +101,7 @@ namespace BurnInTestValidate
                 BackColor = Color.WhiteSmoke
             };
             //Label lblUser = CreateInfoLabel($"User : {_session.UserName}", 0);
-            //Label lblUser = CreateInfoLabel($"User : Admin", 0);
+            lblCount = CreateInfoLabel("FailCount", 5);
             txtCustomer = CreateInfoTextBox("", 15);
             Label lblProduct = CreateInfoLabel(
                 $"Product Type :  M.2 ", 40);
@@ -218,14 +219,16 @@ namespace BurnInTestValidate
             lblserialNoPCBA.Text ="PCBAID :" + pcbaId;
         }
 
-        public bool checkCustomerSerialNo(string customerSerialNo, RichTextBox log)
+        public Dictionary<bool,int> checkCustomerSerialNo(string customerSerialNo, RichTextBox log)
         {
+            Dictionary<bool, int> checkSNN = new Dictionary<bool, int>();
             try
-            { bool checkSNN = false;
+            {
+               
               var  fgDetails = _userService.GetFgDetails(1, customerSerialNo);
                 if (fgDetails != null)
                 {
-                    _customer = fgDetails.Customer;
+                    _customer = customerSerialNo;
                     _pcbSno = fgDetails.PCBAID;
                     _fgName = fgDetails.FgName;
                     UpdateUI(_fgName, _pcbSno);
@@ -247,7 +250,7 @@ namespace BurnInTestValidate
                 else
                 {
                     Log(log, "Serial No not found in DB" + "SN Not Found", Color.Red);
-                    checkSNN = false;
+                    checkSNN.Add(false, 0);
                     SafeUI(() => txtCustomer.Clear());
                     SafeUI(() => txtCustomer.Focus());
                 }
@@ -258,7 +261,8 @@ namespace BurnInTestValidate
             {
                 writeErrorMessage(ex.Message.ToString(), "checkCustomerSerialNo");
                 Log(log, $"ERROR: {ex.Message}", System.Drawing.Color.Red);
-                return false;
+                checkSNN.Add(false , 0);
+                return checkSNN;
             }
         }
         private void SafeUI(Action action)
@@ -279,12 +283,21 @@ namespace BurnInTestValidate
             //var chkserialNo = await getSerialNo(serialFilePath, log);
             string customerSerialNo = txtCustomer.Text.ToString();
             var chkserialNo = await Task.Run(() => checkCustomerSerialNo(customerSerialNo, log));
-            if (chkserialNo == false)
+            if (chkserialNo.Count > 0)
+            {
+                int value = chkserialNo.Values.First();
+
+                this.Invoke(new Action(() =>
+                {
+                    lblCount.Text ="Fail Count :" + value.ToString();
+                }));
+            }
+            if (chkserialNo.ContainsKey(false))
             {
                 writeErrorMessage("Serial No File Not Found", @"D:\\hwi_822\\hwi_822\\");
                 Log(log,"Serial No File Not Found");
-                
-               _userService.SQL_Upload(_pcbSno, _customer, true, "Serial No File Not Found",stages);
+              
+                _userService.SQL_Upload(_pcbSno, _customer, true, "Serial No File Not Found",stages);
                 return;
             }
           
@@ -1954,6 +1967,7 @@ cf.ByControlType(ControlType.Window)
         //        appfrm.AddText("Error: ", Color.Red, true);
         //        appfrm.AddText("Check input values\n", Color.Black);
         //        return;
+
         //    }
 
         //    // Bottom-right position
@@ -2013,9 +2027,9 @@ cf.ByControlType(ControlType.Window)
         }
        
 
-        public async Task<bool> getSerialNo(string HW_PATH , RichTextBox log)
+        public async Task<Dictionary<bool,int>> getSerialNo(string HW_PATH , RichTextBox log)
         {
-            bool checkSN = false;
+            Dictionary<bool, int> checkSN = new Dictionary<bool, int>();
             try
             {
                 string[] invalues = new string[7];
@@ -2035,7 +2049,8 @@ cf.ByControlType(ControlType.Window)
                 {
                     Log(log,"Unable to Open HWiNFO... Contact Test Dev Team" + "HWiNFO Not Opening",Color.Red);
                     //Application.Exit();
-                    return checkSN = false;
+                    checkSN.Add(false, 0);
+                    return checkSN;
                 }
 
                 // --- Retrieve main window AutomationElement ---
@@ -2052,7 +2067,8 @@ cf.ByControlType(ControlType.Window)
                     {
                         Log(log,"Automation Element is Not Working"+ "UI Element Error", Color.Red);
                         // Application.Exit();
-                        return checkSN = false;
+                        checkSN.Add(false, 0);
+                        return checkSN ;
                     }
 
                     // --- Click "Save Report" Button ---
@@ -2098,7 +2114,8 @@ cf.ByControlType(ControlType.Window)
                             catch (Exception ex)
                             {
                                 System.Windows.Forms.MessageBox.Show(ex.ToString());
-                                return checkSN = false;
+                                checkSN.Add(false, 0);
+                                return checkSN;
                             }
                         }
                     }
@@ -2130,7 +2147,8 @@ cf.ByControlType(ControlType.Window)
                                 }
                                 else { 
                                     Log(log,"Serial No not found in DB"+"SN Not Found",Color.Red);
-                                    checkSN=false;
+                                    checkSN.Add(false, 0);
+                                  
                                 }
                                  
                                     return checkSN;
@@ -2147,7 +2165,8 @@ cf.ByControlType(ControlType.Window)
             catch (Exception ex)
             {
                 System.Windows.Forms.MessageBox.Show(ex.ToString());
-                return checkSN=false;
+                checkSN.Add(false, 0);
+                return checkSN;
             }
             return checkSN;
 
