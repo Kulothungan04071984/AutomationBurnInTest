@@ -1304,7 +1304,6 @@ cf.ByControlType(ControlType.Window)
 
                                 }
 
-
                             }
 
                             Log(log, "Disk Checkbox checked completed");
@@ -1385,7 +1384,7 @@ cf.ByControlType(ControlType.Window)
 
 
                             Log(log, "Task Completed");
-                            Thread.Sleep(215000);
+                            Thread.Sleep(150000);
                             //                        var windows = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
 
                             //                        foreach (var win in windows)
@@ -1729,12 +1728,10 @@ cf.ByControlType(ControlType.Window)
                             //    }
 
                             //Testing
-                            _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Completed.", stages);
                             payhistory.overall_result = "Pass";
-                            ppfrm.AddText("SUCCESS: ", Color.Green, true);
-                            ppfrm.AddText("Passmark Test Completed.\n", Color.Black);
-                            ppfrm.ShowDialog();
-                            ppfrm.Activate();
+                            _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Completed.", stages);
+                         
+                         
                             //popup.SetMessage("Passmark Test Completed");
                             //popup.Show();
                             //popup.Activate();
@@ -1811,6 +1808,11 @@ cf.ByControlType(ControlType.Window)
                                 Log(log, "Failed to save test history to DB", System.Drawing.Color.Red);
 
                             }
+                            ppfrm.AddText("SUCCESS: ", Color.Green, true);
+                            ppfrm.AddText("Passmark Test Completed.\n", Color.Green);
+                            ppfrm.ShowDialog();
+                            ppfrm.Activate();
+
                         }
 
                         // }
