@@ -231,20 +231,25 @@ namespace BurnInTestValidate
                     _customer = customerSerialNo;
                     _pcbSno = fgDetails.ProductType;
                     _fgName = fgDetails.FgName;
+                    payhistory.FgNumber = _fgName;
+                    payhistory.PCBAID = _pcbSno;
+                    payhistory.CustomerSerialNumber = customerSerialNo;
                     UpdateUI(_fgName, _pcbSno);
                     int stageid = 0;
                     string stageName = string.Empty;
-                   var stage = _userService.startchecksfcs(fgDetails.FgName);
+                  
+                    var stage = _userService.startchecksfcs(fgDetails.FgName);
 
                     if (stage != null)
                     {
-                        stages= stage;
+                        stages = stage;
                         stageid = Convert.ToInt32(stage[0]);
-                         stageName = stage[1];
+                        stageName = stage[1];
+                      
                     }
-                     //payhistory.StageId = stageid;
-                     //payhistory.StageName = stageName;
-                    checkSNN = _userService.Check_Curr_Stage(_pcbSno, stageid.ToString(), stageName, true);
+                    //payhistory.StageId = stageid;
+                    //payhistory.StageName = stageName;
+                    checkSNN = _userService.Check_Curr_Stage(_pcbSno, stageid.ToString(), "Performance Test", true);
                     Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno);
                 }
                 else

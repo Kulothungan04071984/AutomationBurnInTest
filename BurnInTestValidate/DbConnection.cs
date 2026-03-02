@@ -394,10 +394,11 @@ namespace BurnInTestValidate
                     try
                     {
                         string[] stages = sdr["Stages"].ToString().Split(',');
-                        int index = Array.IndexOf(stages, "262");
+                        int index = Array.IndexOf(stages,"262");
 
                         if (index >= 0 && index < stages.Length - 1)
-                            nextidinfo[0] = stages[index + 1];
+                            nextidinfo[0] = stages[index];
+                      
                     }
                     catch (Exception)
                     {
