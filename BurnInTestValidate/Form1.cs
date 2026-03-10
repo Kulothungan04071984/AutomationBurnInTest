@@ -1292,7 +1292,7 @@ cf.ByControlType(ControlType.Window)
 
 
                             Log(log, "Task Completed");
-                            Thread.Sleep(124000);
+                            Thread.Sleep(135000);
                             //                        var windows = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
 
                             //                        foreach (var win in windows)
@@ -2072,7 +2072,7 @@ cf.ByControlType(ControlType.Window)
                     }
 
                     // --- Click "Save Report" Button ---
-                    ClickButtonByName(hwWindow, "Save Report" , log);
+                   await ClickButtonByName(hwWindow, "Save Report" , log);
 
                     Thread.Sleep(1000);
 
@@ -2199,7 +2199,7 @@ cf.ByControlType(ControlType.Window)
         }
 
 
-        private void ClickButtonByName(AutomationElement root, string containsText,RichTextBox log)
+        private async Task ClickButtonByName(AutomationElement root, string containsText,RichTextBox log)
         {
             using (var automation = new UIA3Automation())
             {
