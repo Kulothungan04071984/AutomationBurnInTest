@@ -49,5 +49,10 @@ namespace BurnInTestValidate
         {
             return _repo.startchecksfcs(FgNumber);
         }
+
+        public string[] Nextstartchecksfcs(string FgNumber)
+        {
+            return _repo.Nextstartchecksfcs(FgNumber);
+        }
     }
 }

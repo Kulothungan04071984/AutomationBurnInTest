@@ -39,20 +39,23 @@
             // 
             // rtbBlinkw
             // 
-            this.rtbBlinkw.Location = new System.Drawing.Point(27, 101);
+            this.rtbBlinkw.Location = new System.Drawing.Point(11, 11);
+            this.rtbBlinkw.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.rtbBlinkw.Name = "rtbBlinkw";
-            this.rtbBlinkw.Size = new System.Drawing.Size(723, 192);
+            this.rtbBlinkw.Size = new System.Drawing.Size(728, 270);
             this.rtbBlinkw.TabIndex = 0;
             this.rtbBlinkw.Text = "";
             // 
             // Blink
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(750, 292);
             this.Controls.Add(this.rtbBlinkw);
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "Blink";
             this.Text = "Blink";
+            this.Load += new System.EventHandler(this.Blink_Load);
             this.ResumeLayout(false);
 
         }

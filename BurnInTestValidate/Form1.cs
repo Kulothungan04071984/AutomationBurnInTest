@@ -28,6 +28,7 @@ using System.Windows.Forms;
 using System.Windows.Ink;
 using System.Xml.Linq;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Application = FlaUI.Core.Application;
 using Label = System.Windows.Forms.Label;
 using Menu = FlaUI.Core.AutomationElements.Menu;
@@ -67,7 +68,9 @@ namespace BurnInTestValidate
         public string _pcbSno;
         public UserSession _session;
         public FgDetails _fgDetails;
-       
+        public string filenameNow=string.Empty;
+        public int stageid = 0;
+        public string stageName = string.Empty;
         //public FrmBurnIntest(IUserService userService,UserSession userSession, string customer,
         //string productTypeName, int productTypeId,
         //string fgName, FgDetails fgDetails)
@@ -191,32 +194,33 @@ namespace BurnInTestValidate
             barcodeTimer.Stop();
             barcodeTimer.Start();
         }
-        private void BarcodeTimer_Tick(object sender, EventArgs e)
-        {
-            barcodeTimer.Stop();
-            BarcodeScannerFunction();
-        }
+        //private void BarcodeTimer_Tick(object sender, EventArgs e)
+        //{
+        //    barcodeTimer.Stop();
+        //    BarcodeScannerFunction();
+        //}
 
-        private void BarcodeScannerFunction()
-        {
-            string barcode = txtCustomer.Text.Trim();
+        //private void BarcodeScannerFunction()
+        //{
+        //    string barcode = txtCustomer.Text.Trim();
 
-            if (!string.IsNullOrEmpty(barcode))
-            {
-                btnStart.PerformClick();
-            }
-        }
+        //    if (!string.IsNullOrEmpty(barcode))
+        //    {
+        //        btnStart.PerformClick();
+        //    }
+        //}
 
-        private void UpdateUI(string fgName,string pcbaId)
+        private void UpdateUI(string fgName,string pcbaId,string customerserialno)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => UpdateUI(fgName,pcbaId)));
+                Invoke(new Action(() => UpdateUI(fgName,pcbaId, customerserialno)));
                 return;
             }
 
             lblFG.Text ="FG Name :" + fgName;
             lblserialNoPCBA.Text ="PCBAID :" + pcbaId;
+            txtCustomer.Text = customerserialno;
         }
 
         public Dictionary<bool,int> checkCustomerSerialNo(string customerSerialNo, RichTextBox log)
@@ -234,9 +238,8 @@ namespace BurnInTestValidate
                     payhistory.FgNumber = _fgName;
                     payhistory.PCBAID = _pcbSno;
                     payhistory.CustomerSerialNumber = customerSerialNo;
-                    UpdateUI(_fgName, _pcbSno);
-                    int stageid = 0;
-                    string stageName = string.Empty;
+                    UpdateUI(_fgName, _pcbSno, _customer);
+                  
                   
                     var stage = _userService.startchecksfcs(fgDetails.FgName);
 
@@ -285,9 +288,10 @@ namespace BurnInTestValidate
             var log = (RichTextBox)this.Tag;
             Log(log, " Customerb Serial No :" + txtCustomer.Text.ToString(), Color.Green);
             string serialFilePath = ConfigurationManager.AppSettings["HWPath"].ToString();
-            //var chkserialNo = await getSerialNo(serialFilePath, log);
+            //string serialFilePath = @"C:\project\hwi_822\hwi_822";
+            var chkserialNo = await getSerialNo(serialFilePath, log);
             string customerSerialNo = txtCustomer.Text.ToString();
-            var chkserialNo = await Task.Run(() => checkCustomerSerialNo(customerSerialNo, log));
+          //  var chkserialNo = await Task.Run(() => checkCustomerSerialNo(customerSerialNo, log));
             if (chkserialNo.Count > 0)
             {
                 int value = chkserialNo.Values.First();
@@ -299,10 +303,10 @@ namespace BurnInTestValidate
             }
             if (chkserialNo.ContainsKey(false))
             {
-                writeErrorMessage("Serial No File Not Found", @"D:\\hwi_822\\hwi_822\\");
-                Log(log,"Serial No File Not Found");
+                writeErrorMessage("Stage MissMatch/Serial No Not Found", serialFilePath);
+                Log(log,"Stage MissMatch/Serial No Not Found",Color.Red);
               
-                _userService.SQL_Upload(_pcbSno, _customer, true, "Serial No File Not Found",stages);
+                _userService.SQL_Upload(_pcbSno, _customer, true, "Stage MissMatch/Serial No Not Found",stages);
                 return;
             }
           
@@ -458,8 +462,8 @@ exit";
             Log(log, "Disk Partition Start");
             // bool eStatus = false;
             //Testing
-            //var status = await DiskPartitionDynamic_NoWMI(log);
-            //if (status == "false") return;
+            var status = await DiskPartitionDynamic_NoWMI(log);
+            if (status == "false") return;
 
             //BurnIn Test Start
 
@@ -715,108 +719,12 @@ cf.ByControlType(ControlType.Window)
 
 
 
-                    Thread.Sleep(100000);
+                    // Thread.Sleep(100000); Testing
+                    //check crystal result strat
 
-                    var cryCheck = mainWindowCrystal
-.FindFirstDescendant(cf => cf.ByName("Stop"))
-?.AsButton();
+                    Thread.Sleep(1000);
 
-                    if (cryCheck != null)
-                    {
-                        do
-                        {
-                            Thread.Sleep(1000);
-                            // Log(log, " D:Waiting for Crystal Test to complete... --" + cryCheck.Name);
-                        } while (cryCheck.Name != "All");
-                    }
-                    Log(log, " D:Crystal Test to completed");
-                    var validIds = new HashSet<string>
-{
-    "1009","1010","1011","1012",
-    "1014","1015","1016","1017"
-};
-
-                    int count = 0;
-
-                    foreach (var el in mainWindowCrystal.FindAllDescendants())
-                    {
-                        string automationId = SafeGet(() => el.AutomationId);
-
-                        if (!validIds.Contains(automationId))
-                            continue;
-
-                        string name = SafeGet(() => el.Name);
-                        string controlType = SafeGet(() => el.ControlType.ToString());
-
-                        var element = mainWindowCrystal.FindFirstDescendant(cf =>
-                            cf.ByAutomationId(automationId));
-
-                        if (element == null)
-                            continue;
-
-                        string readValue = getcrystalvalue(element);
-                        if (automationId == "1009")
-                            payhistory.read_one = readValue;
-                        else if (automationId == "1010")
-                            payhistory.read_two = readValue;
-                        else if (automationId == "1011")
-                            payhistory.read_three = readValue;
-                        else if (automationId == "1012")
-                            payhistory.read_four = readValue;
-                        else if (automationId == "1014")
-                            payhistory.write_one = readValue;
-                        else if (automationId == "1015")
-                            payhistory.write_two = readValue;
-                        else if (automationId == "1016")
-                            payhistory.write_three = readValue;
-                        else if (automationId == "1017")
-                            payhistory.write_four = readValue;
-                        // ❌ FAIL case
-                        if (readValue == "0")
-                        {
-                            _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
-                            Log(log, "Crystal DiskMark Fail " + readValue);
-                            writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
-                            payhistory.CrystalReport = "Fail";
-                            ppfrm.AddText("ERROR: ", Color.Red, true);
-                            ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
-                            ppfrm.ShowDialog();
-                            ppfrm.Focus();
-
-                            return;
-                        }
-                        if ((automationId == "1009" || automationId == "1014") && Convert.ToDecimal(readValue) < 1000)
-                        {
-                            _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
-                            Log(log, "Crystal DiskMark Fail " + readValue);
-                            writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
-                            payhistory.CrystalReport = "Fail";
-                            ppfrm.AddText("ERROR: ", Color.Red, true);
-                            ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
-                            ppfrm.ShowDialog();
-                            ppfrm.Focus();
-                            return;
-                        }
-                        count++;
-
-                        // ✅ PASS case (all 8 values processed)
-                        if (count == validIds.Count)
-                        {
-                            Log(log, "Crystal DiskMark Pass - " + readValue);
-
-                            this.BeginInvoke(new Action(() =>
-                            {
-                                var popup = new BlinkPopupForm(6000);
-                                popup.SetMessage("Crystal DiskMark Pass - Read");
-                                popup.Show();
-                                popup.Activate();
-                            }));
-                            payhistory.CrystalReport = "Pass";
-                            break;
-                        }
-
-                        Log(log, $"Type: {controlType} | Name: {name} | AutomationId: {automationId}");
-                    }
+                    //check crystal result End
 
                     //var elements = mainWindowCrystal.FindAllDescendants();
                     //int count = 0;
@@ -1384,7 +1292,7 @@ cf.ByControlType(ControlType.Window)
 
 
                             Log(log, "Task Completed");
-                            Thread.Sleep(150000);
+                            Thread.Sleep(124000);
                             //                        var windows = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
 
                             //                        foreach (var win in windows)
@@ -1417,6 +1325,113 @@ cf.ByControlType(ControlType.Window)
                             //                            Log(log, $"AutomationId : {automationId}");
                             //                        }
 
+                            //crystal Report check - Start
+                            var cryCheck = mainWindowCrystal
+.FindFirstDescendant(cf => cf.ByName("Stop"))
+?.AsButton();
+
+                            if (cryCheck != null)
+                            {
+                                do
+                                {
+                                    Thread.Sleep(1000);
+                                    // Log(log, " D:Waiting for Crystal Test to complete... --" + cryCheck.Name);
+                                } while (cryCheck.Name != "All");
+                            }
+                            Log(log, " D:Crystal Test to completed");
+                            var validIds = new HashSet<string>
+{
+    "1009","1010","1011","1012",
+    "1014","1015","1016","1017"
+};
+
+                            int count = 0;
+
+                            foreach (var el in mainWindowCrystal.FindAllDescendants())
+                            {
+                                string automationId = SafeGet(() => el.AutomationId);
+
+                                if (!validIds.Contains(automationId))
+                                    continue;
+
+                                string name = SafeGet(() => el.Name);
+                                string controlType = SafeGet(() => el.ControlType.ToString());
+
+                                var element = mainWindowCrystal.FindFirstDescendant(cf =>
+                                    cf.ByAutomationId(automationId));
+
+                                if (element == null)
+                                    continue;
+
+                                string readValue = getcrystalvalue(element);
+                                if (automationId == "1009")
+                                    payhistory.read_one = readValue;
+                                else if (automationId == "1010")
+                                    payhistory.read_two = readValue;
+                                else if (automationId == "1011")
+                                    payhistory.read_three = readValue;
+                                else if (automationId == "1012")
+                                    payhistory.read_four = readValue;
+                                else if (automationId == "1014")
+                                    payhistory.write_one = readValue;
+                                else if (automationId == "1015")
+                                    payhistory.write_two = readValue;
+                                else if (automationId == "1016")
+                                    payhistory.write_three = readValue;
+                                else if (automationId == "1017")
+                                    payhistory.write_four = readValue;
+                                // ❌ FAIL case
+                                if (readValue == "0")
+                                {
+                                    _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
+                                    Log(log, "Crystal DiskMark Fail " + readValue);
+                                    writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
+                                    payhistory.CrystalReport = "Fail";
+                                    ppfrm.AddText("ERROR: ", Color.Red, true);
+                                    ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
+                                    ppfrm.ShowDialog();
+                                    ppfrm.Focus();
+
+                                    return;
+                                }
+                                if ((automationId == "1009" || automationId == "1014") && Convert.ToDecimal(readValue) < 1000)
+                                {
+                                    _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
+                                    Log(log, "Crystal DiskMark Fail " + readValue);
+                                    writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
+                                    payhistory.CrystalReport = "Fail";
+                                    ppfrm.AddText("ERROR: ", Color.Red, true);
+                                    ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
+                                    ppfrm.ShowDialog();
+                                    ppfrm.Focus();
+                                    return;
+                                }
+                                count++;
+
+                                // ✅ PASS case (all 8 values processed)
+                                if (count == validIds.Count)
+                                {
+                                    Log(log, "Crystal DiskMark Pass - " + readValue);
+
+                                    this.BeginInvoke(new Action(() =>
+                                    {
+                                        var popup = new BlinkPopupForm(6000);
+                                        popup.SetMessage("Crystal DiskMark Pass - Read");
+                                        popup.Show();
+                                        popup.Activate();
+                                    }));
+                                    payhistory.CrystalReport = "Pass";
+                                    Log(log, "Crystal DiskMark Pass", Color.Green);
+                                    break;
+                                }
+
+                                Log(log, $"Type: {controlType} | Name: {name} | AutomationId: {automationId}");
+                            }
+
+                            //Crystal Report check - end
+
+                            //BurmInTest Result Check
+
                             string resultname = string.Empty;
 
                             do
@@ -1432,6 +1447,9 @@ cf.ByControlType(ControlType.Window)
                                 Log(log, "Waiting for Burn In Test to complete... " + name);
 
                             } while (resultname == string.Empty);
+                            Thread.Sleep(2000);
+                        
+
 
                             //Testing
 
@@ -1729,25 +1747,36 @@ cf.ByControlType(ControlType.Window)
 
                             //Testing
                             payhistory.overall_result = "Pass";
-                            _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Completed.", stages);
-                         
-                         
-                            //popup.SetMessage("Passmark Test Completed");
-                            //popup.Show();
-                            //popup.Activate();
-                            //this.BeginInvoke(new Action(() =>
-                            //{
-                            //    BlinkPopupForm popup = new BlinkPopupForm(6000);
-                            //    popup.SetMessage("Passmark Test Completed..(Disk Partition , Crystal DiskMark, Burn In Test");
-                            //    popup.Show();
-                            //    popup.Activate();
-                            //}));
+                            payhistory.burnintest = "Pass";
+                           var nextstage = _userService.Nextstartchecksfcs(_fgName);
+                           _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Completed.", nextstage);
+                            payhistory.CreatedBy = "Admin";
+                            int resultHistory = _userService.inserthistory(payhistory);
+                            if (resultHistory > 0)
+                            {
+                                Log(log, "Test history saved to DB", System.Drawing.Color.Green);
+                            }
+                            else
+                            {
+                                Log(log, "Failed to save test history to DB", System.Drawing.Color.Red);
 
-                            //frmblink.AddText("Message: ", Color.Green, true);
-                            //frmblink.AddText("Passmark Test - PASS", Color.Green);
-                            //frmblink.ShowDialog();
-                            //frmblink.Focus();
-                            //frmblink.Activate();
+                            }
+                            // Burn In Test Check End
+
+                            //ppfrm.TopMost = true;
+                            //ppfrm.AddText("SUCCESS: ", Color.Green, true);
+                            //ppfrm.AddText("Passmark Test Completed.\n", Color.Green);
+                            //ppfrm.ShowDialog();
+                            //ppfrm.Activate();
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                frmblink = new Blink();
+                                frmblink.TopMost = true;
+                                frmblink.Show();
+
+                                frmblink.AddText("SUCCESS:", Color.Green, true);
+                                frmblink.AddText("Passmark Test Completed.", Color.Green);
+                            });
 
 
                             if (mainWindowCrystal == null)
@@ -1759,12 +1788,12 @@ cf.ByControlType(ControlType.Window)
                                         FlaUI.Core.Definitions.WindowVisualState.Normal);
                                 }
                                 mainWindowCrystal.Close();
-                                //  Log(log, "Crystal DiskMark Closed -- Minimized");
+                               
                             }
                             else if (mainWindowCrystal != null)
                             {
                                 mainWindowCrystal.Close();
-                                // Log(log, "Crystal DiskMark Closed -- Minimized");
+                              
                             }
                             else
                                 Log(log, "Crystal DiskMark - Page not found");
@@ -1797,21 +1826,8 @@ cf.ByControlType(ControlType.Window)
 
                             mainWindow.Close();
                             app.Dispose();
-                            payhistory.CreatedBy = "Admin";
-                            int resultHistory = _userService.inserthistory(payhistory);
-                            if (resultHistory > 0)
-                            {
-                                Log(log, "Test history saved to DB", System.Drawing.Color.Green);
-                            }
-                            else
-                            {
-                                Log(log, "Failed to save test history to DB", System.Drawing.Color.Red);
-
-                            }
-                            ppfrm.AddText("SUCCESS: ", Color.Green, true);
-                            ppfrm.AddText("Passmark Test Completed.\n", Color.Green);
-                            ppfrm.ShowDialog();
-                            ppfrm.Activate();
+                           
+                            
 
                         }
 
@@ -1961,30 +1977,7 @@ cf.ByControlType(ControlType.Window)
             }
         }
 
-        //public void popup(int message
-        //    )
-        //{
-        //    if (message == 1)
-        //    {
-        //        appfrm.AddText("SUCCESS: ", Color.Green, true);
-        //        appfrm.AddText("Data saved successfully\n", Color.Black);
-        //    }
-        //    else if (message == 2)
-        //    {
-        //        appfrm.AddText("Error: ", Color.Red, true);
-        //        appfrm.AddText("Check input values\n", Color.Black);
-        //        return;
-
-        //    }
-
-        //    // Bottom-right position
-        //    appfrm.StartPosition = FormStartPosition.Manual;
-        //    appfrm.Location = new Point(
-        //        Screen.PrimaryScreen.WorkingArea.Width - appfrm.Width - 10,
-        //        Screen.PrimaryScreen.WorkingArea.Height - appfrm.Height - 10);
-
-        //    appfrm.Show();
-        // }
+        
 
         public string getcrystalvalue(AutomationElement ftxt)
         {
@@ -2028,7 +2021,7 @@ cf.ByControlType(ControlType.Window)
         private void FrmBurnIntest_Load(object sender, EventArgs e)
         {
             barcodeTimer.Interval = 300; // 300ms delay
-            barcodeTimer.Tick += BarcodeTimer_Tick;
+           // barcodeTimer.Tick += BarcodeTimer_Tick;
 
           //  txtCustomer.TextChanged += txtCustomer_TextChanged;
         }
@@ -2102,7 +2095,8 @@ cf.ByControlType(ControlType.Window)
                     this.Refresh();
 
 
-                    string csvFilePath = Path.Combine(HW_PATH, Environment.MachineName + ".csv");
+                    // string csvFilePath = Path.Combine(HW_PATH, Environment.MachineName + ".csv");
+                    string csvFilePath = Path.Combine(HW_PATH, filenameNow + ".csv");
 
                     List<string[]> lines = new List<string[]>();
 
@@ -2140,25 +2134,50 @@ cf.ByControlType(ControlType.Window)
                             {
                                 // string rpt_SN = rows[1];
 
-                                //serialno = rows[1].Split('(')[1].Replace(')', ' ').Trim();
-                                serialno = rows[1].ToString(); // Customer Serial No
-                                //System.Windows.Forms.MessageBox.Show(serialno);
-                               writeErrorMessage("Serial No-" + serialno, "getSerialNo");
-                             _fgDetails =  _userService.GetFgDetails(_productTypeId, serialno);
-                                if (_fgDetails != null  )
+                               
+                                serialno = rows[1].ToString();
+                                if (!serialno.Contains("SSD"))
                                 {
-                                    _customer = _fgDetails.Customer;
-                                     _pcbSno = _fgDetails.PCBAID;
-                                    _fgName = _fgDetails.FgName;
-                                    checkSN = _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
-                                }
-                                else { 
-                                    Log(log,"Serial No not found in DB"+"SN Not Found",Color.Red);
-                                    checkSN.Add(false, 0);
-                                  
+                                    writeErrorMessage("Serial No-" + serialno, "getSerialNo");
+                                    _productTypeId = 1;
+                                    //serialno = "ESP3C1Q06CNA01656"; //Testing
+                                    _fgDetails = _userService.GetFgDetails(_productTypeId, serialno);
+                                    if (_fgDetails != null)
+                                    {
+                                        // _customer = _fgDetails.Customer;
+                                        _customer = serialno;
+                                        _pcbSno = _fgDetails.ProductType;
+                                        _fgName = _fgDetails.FgName;
+                                        UpdateUI(_fgName, _pcbSno, _customer);
+                                        payhistory.FgNumber = _fgName;
+                                        payhistory.PCBAID = _pcbSno;
+                                        payhistory.CustomerSerialNumber = _customer;
+                                        var stage = _userService.startchecksfcs(_fgName);
+
+                                        if (stage != null)
+                                        {
+                                            stages = stage;
+                                            stageid = Convert.ToInt32(stage[0]);
+                                            stageName = stage[1];
+
+                                        }
+                                        checkSN = _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
+                                        Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno);
+                                    }
+                                    else
+                                    {
+                                        //Log(log, "Serial No not found in Data Base", Color.Red);
+                                        //checkSN.Add(false, 0);
+                                        Log(log, "Serial No not found in DB", Color.Red);
+                                        checkSN.Add(false, 0);
+                                        SafeUI(() => txtCustomer.Clear());
+                                        SafeUI(() => txtCustomer.Focus());
+
+                                    }
+                                    return checkSN;
                                 }
                                  
-                                    return checkSN;
+                                  
                             }
                         }
                     }
@@ -2226,7 +2245,7 @@ cf.ByControlType(ControlType.Window)
                 {
                     filename.Patterns.Value.Pattern.SetValue("");
                     var fname = DateAndTime.Now.ToString();
-                    var filenameNow = Regex.Replace(fname, @"[^0-9]", "");
+                     filenameNow = Regex.Replace(fname, @"[^0-9]", "");
                     filename.Patterns.Value.Pattern.SetValue(filenameNow + ".CSV");
                 }
                 else

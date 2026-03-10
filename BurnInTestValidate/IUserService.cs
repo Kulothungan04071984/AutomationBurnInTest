@@ -18,6 +18,8 @@ namespace BurnInTestValidate
         string SQL_Upload(string PcbSno, string CusSno, bool boardfail, string Result_Remarks, string[] stages);
 
         string[] startchecksfcs(string FgNumber);
+
+        string[] Nextstartchecksfcs(string FgNumber);
     }
            
 }

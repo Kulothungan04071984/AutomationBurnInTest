@@ -11,6 +11,7 @@ using System.Windows.Forms;
 
 namespace BurnInTestValidate
 {
+
     public partial class FrmLogin : Form
     {
         private readonly IServiceProvider _serviceProvider;

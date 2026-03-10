@@ -207,7 +207,7 @@ namespace BurnInTestValidate
             string sqluploadresult = string.Empty;
             if (stage.Length > 1)
             {
-                lbl_app_id= stage[0].ToString();
+                lbl_app_id = stage[0].ToString();
                 lblstagename = stage[1].ToString();
             }
            
@@ -399,6 +399,71 @@ namespace BurnInTestValidate
                         if (index >= 0 && index < stages.Length - 1)
                             nextidinfo[0] = stages[index];
                       
+                    }
+                    catch (Exception)
+                    {
+                        // ignored (same as VB empty catch)
+                    }
+                }
+
+                sdr.Close();
+                SFCS_db.Close();
+
+                string cmd1 = "SELECT App_ID, Application_Name FROM App_ver WHERE App_ID = '" + nextidinfo[0] + "'";
+                SqlDataAdapter da1 = new SqlDataAdapter(cmd1, SFCS_db);
+                DataSet ds1 = new DataSet();
+                da1.Fill(ds1, "app_name");
+
+                if (ds1.Tables[0].Rows.Count > 0)
+                {
+                    nextidinfo[1] = ds1.Tables[0].Rows[0][1].ToString();
+                }
+
+                SFCS_db.Close();
+
+                //Fill_Response_Data("SFCS Next Stage : " + nextidinfo[0] + "|" + nextidinfo[1]);
+            }
+            catch (Exception ex)
+            {
+                //MessageBox.Show(ex.Message.ToString(),
+                //                "Exception in Fetching Next Stage",
+                //                MessageBoxButtons.OK,
+                //                MessageBoxIcon.Information);
+
+                return nextidinfo;   // equivalent to Exit Sub
+            }
+            return nextidinfo;
+        }
+
+        public string[] Nextstartchecksfcs(string FgNumber)
+        {
+            try
+            {
+                var SFCS_db = _ConnectionString.CreateConnection(DatabaseType.BurnIn);
+                if (SFCS_db.State == ConnectionState.Open)
+                    SFCS_db.Close();
+
+                SqlCommand cmd = new SqlCommand(
+                    "SELECT * FROM RoutingStages WHERE FG = '" + FgNumber + "'",
+                    SFCS_db);
+
+                if (SFCS_db.State == ConnectionState.Closed)
+                    SFCS_db.Open();
+
+                SqlDataReader sdr = cmd.ExecuteReader();
+
+                if (sdr.Read())
+                {
+                    try
+                    {
+                        string[] stages = sdr["Stages"].ToString().Split(',');
+                        int index = Array.IndexOf(stages, "262");
+
+                        if (index >= 0 && index < stages.Length - 1)
+                        {
+                            nextidinfo[0] = stages[index + 1];
+                        }
+
                     }
                     catch (Exception)
                     {
