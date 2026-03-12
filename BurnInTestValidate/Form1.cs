@@ -264,13 +264,13 @@ namespace BurnInTestValidate
             layout.Controls.Add(btnStart, 2, 4);
 
          
-            PictureBox gifBox = new PictureBox();
-            gifBox.Image = Properties.Resources.Animation;
-            gifBox.SizeMode = PictureBoxSizeMode.Zoom;
-            gifBox.Dock = DockStyle.Fill;
+            //PictureBox gifBox = new PictureBox();
+            //gifBox.Image = Properties.Resources.Animation;
+            //gifBox.SizeMode = PictureBoxSizeMode.Zoom;
+            //gifBox.Dock = DockStyle.Fill;
 
-            layout.Controls.Add(gifBox, 2, 1);
-            layout.SetRowSpan(gifBox, 3);
+            //layout.Controls.Add(gifBox, 2, 1);
+            //layout.SetRowSpan(gifBox, 3);
 
 
             _rtbLog = new RichTextBox();
@@ -288,17 +288,17 @@ namespace BurnInTestValidate
             
         }
      
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            using (LinearGradientBrush brush = new LinearGradientBrush(
-                this.ClientRectangle,
-                Color.LightBlue,
-                Color.White,
-                90F))
-            {
-                e.Graphics.FillRectangle(brush, this.ClientRectangle);
-            }
-        }
+        //protected override void OnPaint(PaintEventArgs e)
+        //{
+        //    using (LinearGradientBrush brush = new LinearGradientBrush(
+        //        this.ClientRectangle,
+        //        Color.LightBlue,
+        //        Color.White,
+        //        90F))
+        //    {
+        //        e.Graphics.FillRectangle(brush, this.ClientRectangle);
+        //    }
+        //}
     
         private void txtCustomer_TextChanged(object sender, EventArgs e)
         {
@@ -1416,7 +1416,11 @@ cf.ByControlType(ControlType.Window)
 
 
                             Log(log, "Task Running", Color.Lime);
-                            Thread.Sleep(146000);
+                            //int sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["sleep"].ToString());
+                            //if (sleepingTime == null)
+                            //    sleepingTime = 210000;
+
+                            Thread.Sleep(210000);
                             //                        var windows = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
 
                             //                        foreach (var win in windows)
