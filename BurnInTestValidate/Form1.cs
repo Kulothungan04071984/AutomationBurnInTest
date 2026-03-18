@@ -1,4 +1,5 @@
-﻿using FlaUI.Core;
+﻿using CsvHelper;
+using FlaUI.Core;
 using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Conditions;
 using FlaUI.Core.Definitions;
@@ -16,6 +17,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -334,13 +336,13 @@ namespace BurnInTestValidate
             txtCustomer.Text = customerserialno;
         }
 
-        public Dictionary<bool,int> checkCustomerSerialNo(string customerSerialNo, RichTextBox log)
+        public async Task<Dictionary<bool,int>> checkCustomerSerialNo(string customerSerialNo, RichTextBox log)
         {
             Dictionary<bool, int> checkSNN = new Dictionary<bool, int>();
             try
             {
                
-              var  fgDetails = _userService.GetFgDetails(1, customerSerialNo);
+              var  fgDetails =await _userService.GetFgDetails(1, customerSerialNo);
                 if (fgDetails != null)
                 {
                     _customer = customerSerialNo;
@@ -352,7 +354,7 @@ namespace BurnInTestValidate
                     UpdateUI(_fgName, _pcbSno, _customer);
                   
                   
-                    var stage = _userService.startchecksfcs(fgDetails.FgName);
+                    var stage =await _userService.startchecksfcs(fgDetails.FgName);
 
                     if (stage != null)
                     {
@@ -363,7 +365,7 @@ namespace BurnInTestValidate
                     }
                     //payhistory.StageId = stageid;
                     //payhistory.StageName = stageName;
-                    checkSNN = _userService.Check_Curr_Stage(_pcbSno, stageid.ToString(), "Performance Test", true);
+                    checkSNN =await _userService.Check_Curr_Stage(_pcbSno, stageid.ToString(), "Performance Test", true);
                     Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno);
                 }
                 else
@@ -391,12 +393,30 @@ namespace BurnInTestValidate
             else
                 action();
         }
+        public void HwExeKilled(RichTextBox rtb)
+        {
+            var processes = Process.GetProcessesByName("HWiNFO64");
+
+            foreach (var process in processes)
+            {
+                try
+                {
+                    process.Kill();
+                    process.WaitForExit(); 
+                }
+                catch (Exception ex)
+                {
+                    Log(rtb,ex.Message,Color.Red);
+                }
+            }
+        }
         private async void btnStart_Click(object sender, EventArgs e)
         {
            
             var btn = (System.Windows.Forms.Button)sender;
             btn.Enabled = false;
             var log = (RichTextBox)this.Tag;
+            HwExeKilled(log);
             Log(log, " Customerb Serial No :" + txtCustomer.Text.ToString(), Color.Lime);
             string serialFilePath = ConfigurationManager.AppSettings["HWPath"].ToString();
             //string serialFilePath = @"C:\project\hwi_822\hwi_822";
@@ -846,7 +866,7 @@ cf.ByControlType(ControlType.Window)
                     // Thread.Sleep(100000); Testing
                     //check crystal result strat
 
-                    Thread.Sleep(1000);
+                    Thread.Sleep(500);
 
                     //check crystal result End
 
@@ -1420,7 +1440,7 @@ cf.ByControlType(ControlType.Window)
                             //if (sleepingTime == null)
                             //    sleepingTime = 210000;
 
-                            Thread.Sleep(210000);
+                            Thread.Sleep(320000);
                             //                        var windows = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
 
                             //                        foreach (var win in windows)
@@ -1462,7 +1482,7 @@ cf.ByControlType(ControlType.Window)
                             {
                                 do
                                 {
-                                    Thread.Sleep(1000);
+                                    Thread.Sleep(500);
                                     // Log(log, " D:Waiting for Crystal Test to complete... --" + cryCheck.Name);
                                 } while (cryCheck.Name != "All");
                             }
@@ -1543,7 +1563,7 @@ cf.ByControlType(ControlType.Window)
 
                                     this.BeginInvoke(new Action(() =>
                                     {
-                                        var popup = new BlinkPopupForm(6000);
+                                        var popup = new BlinkPopupForm(9000);
                                         popup.SetMessage("Crystal DiskMark Pass - Read");
                                         popup.Show();
                                         popup.Activate();
@@ -1572,10 +1592,10 @@ cf.ByControlType(ControlType.Window)
 
                                 Thread.Sleep(1000);
                                 string name = burnintestresult == null ? "N/A" : burnintestresult.Name;
-                                Log(log, "Waiting for Burn In Test to complete... " + name, Color.Lime);
+                                //Log(log, "Waiting for Burn In Test to complete... " + name, Color.Lime);
 
                             } while (resultname == string.Empty);
-                            Thread.Sleep(2000);
+                            Thread.Sleep(1500);
                         
 
 
@@ -2240,35 +2260,56 @@ cf.ByControlType(ControlType.Window)
 
 
                     // string csvFilePath = Path.Combine(HW_PATH, Environment.MachineName + ".csv");
+                    //Testing
+                    //string csvFilePath = Path.Combine(HW_PATH, filenameNow + ".csv");
+
+                    //List<string[]> lines = new List<string[]>();
+
+                    //using (TextFieldParser parser = new TextFieldParser(csvFilePath))
+                    //{
+                    //    parser.TextFieldType = FieldType.Delimited;
+                    //    parser.SetDelimiters(",");
+
+                    //    while (!parser.EndOfData)
+                    //    {
+                    //        try
+                    //        {
+                    //            string[] fields = parser.ReadFields();
+                    //            lines.Add(fields);
+                    //        }
+                    //        catch (Exception ex)
+                    //        {
+                    //            System.Windows.Forms.MessageBox.Show(ex.ToString());
+                    //            checkSN.Add(false, 0);
+                    //            return checkSN;
+                    //        }
+                    //    }
+                    //}
+
                     string csvFilePath = Path.Combine(HW_PATH, filenameNow + ".csv");
-
                     List<string[]> lines = new List<string[]>();
-
-                    using (TextFieldParser parser = new TextFieldParser(csvFilePath))
+                    using (var reader = new StreamReader(csvFilePath))
+                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                     {
-                        parser.TextFieldType = FieldType.Delimited;
-                        parser.SetDelimiters(",");
-
-                        while (!parser.EndOfData)
+                        while (true)
                         {
                             try
                             {
-                                string[] fields = parser.ReadFields();
-                                lines.Add(fields);
+                                if (!csv.Read())
+                                    break;
+
+                                lines.Add(csv.Parser.Record);
                             }
                             catch (Exception ex)
                             {
-                                System.Windows.Forms.MessageBox.Show(ex.ToString());
-                                checkSN.Add(false, 0);
-                                return checkSN;
+                                Log(log,"Check Rows: " + ex.Message,Color.Yellow);
+                                continue;
                             }
                         }
                     }
 
-
-
-                    // -------- Loop through CSV --------
-                    for (int i = 0; i < lines.Count; i++)
+                        // -------- Loop through CSV --------
+                        for (int i = 0; i < lines.Count; i++)
                     {
                         string[] rows = lines[i];
 
@@ -2285,7 +2326,13 @@ cf.ByControlType(ControlType.Window)
                                     writeErrorMessage("Serial No-" + serialno, "getSerialNo");
                                     _productTypeId = 1;
                                     //serialno = "ESP3C1Q06CNA01656"; //Testing
-                                    _fgDetails = _userService.GetFgDetails(_productTypeId, serialno);
+                                    _fgDetails =await _userService.GetFgDetails(_productTypeId, serialno);
+                                    if (_fgDetails == null)
+                                    {
+                                        Thread.Sleep(1000);
+                                        _fgDetails =await _userService.GetFgDetails(_productTypeId, serialno);
+                                    }
+
                                     if (_fgDetails != null)
                                     {
                                         // _customer = _fgDetails.Customer;
@@ -2296,7 +2343,7 @@ cf.ByControlType(ControlType.Window)
                                         payhistory.FgNumber = _fgName;
                                         payhistory.PCBAID = _pcbSno;
                                         payhistory.CustomerSerialNumber = _customer;
-                                        var stage = _userService.startchecksfcs(_fgName);
+                                        var stage =await _userService.startchecksfcs(_fgName);
 
                                         if (stage != null)
                                         {
@@ -2305,7 +2352,7 @@ cf.ByControlType(ControlType.Window)
                                             stageName = stage[1];
 
                                         }
-                                        checkSN = _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
+                                        checkSN =await _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
                                         Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno, Color.Lime);
                                     }
                                     else

@@ -94,7 +94,7 @@ namespace BurnInTestValidate
             return result;
         }
          
-        public Dictionary<bool,int> Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
+        public async Task<Dictionary<bool,int>> Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
         {
             bool checkCurrStageResult = false;
 
@@ -372,7 +372,7 @@ namespace BurnInTestValidate
 
 
 
-        public string[] startchecksfcs(string FgNumber)
+        public async Task<string[]> startchecksfcs(string FgNumber)
         {
             try
             {
@@ -611,7 +611,7 @@ namespace BurnInTestValidate
         //    Application.DoEvents();
         //}
 
-        public FgDetails GetFgDetails(int productId, string cusNumber)
+        public async Task<FgDetails> GetFgDetails(int productId, string cusNumber)
         {
             FgDetails details = null;
             using (SqlConnection sqlConnection = _ConnectionString.CreateConnection(Program.DatabaseType.Reporting))

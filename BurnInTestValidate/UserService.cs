@@ -25,7 +25,7 @@ namespace BurnInTestValidate
         public DataTable GetProductTypes() => _repo.GetProductTypes();
         public DataTable GetFGNames(int productTypeId) => _repo.GetFGNames(productTypeId);
 
-        public Dictionary<bool, int> Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
+        public Task<Dictionary<bool, int>> Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
         {
             return _repo.Check_Curr_Stage(serialno, app_id, stage, boardonline);
         }
@@ -35,7 +35,7 @@ namespace BurnInTestValidate
             return _repo.ValidateUser(username, password);
         }
 
-        public FgDetails GetFgDetails(int productId, string cusNumber)
+        public Task<FgDetails> GetFgDetails(int productId, string cusNumber)
         {
             return _repo.GetFgDetails(productId, cusNumber);
         }
@@ -45,7 +45,7 @@ namespace BurnInTestValidate
             return _repo.SQL_Upload(PcbSno, CusSno, boardfail, Result_Remarks , stages);
         }
 
-        public string[] startchecksfcs(string FgNumber)
+        public Task<string[]> startchecksfcs(string FgNumber)
         {
             return _repo.startchecksfcs(FgNumber);
         }

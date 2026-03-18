@@ -28,41 +28,28 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.rtbMessage = new System.Windows.Forms.RichTextBox();
-            this.btnOk = new System.Windows.Forms.Button();
+            this.components = new System.ComponentModel.Container();
+            this.richTextBox = new System.Windows.Forms.RichTextBox();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
-            // rtbMessage
+            // richTextBox
             // 
-            this.rtbMessage.Location = new System.Drawing.Point(12, 12);
-            this.rtbMessage.Name = "rtbMessage";
-            this.rtbMessage.Size = new System.Drawing.Size(776, 368);
-            this.rtbMessage.TabIndex = 0;
-            this.rtbMessage.Text = "";
+            this.richTextBox.Location = new System.Drawing.Point(12, 12);
+            this.richTextBox.Name = "richTextBox";
+            this.richTextBox.Size = new System.Drawing.Size(672, 237);
+            this.richTextBox.TabIndex = 0;
+            this.richTextBox.Text = "";
             // 
-            // btnOk
+            // timer1
             // 
-            this.btnOk.Location = new System.Drawing.Point(652, 386);
-            this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(136, 42);
-            this.btnOk.TabIndex = 1;
-            this.btnOk.Text = "OK";
-            this.btnOk.UseVisualStyleBackColor = true;
-            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // popupform
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.btnOk);
-            this.Controls.Add(this.rtbMessage);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
+            this.ClientSize = new System.Drawing.Size(696, 261);
+            this.Controls.Add(this.richTextBox);
             this.Name = "popupform";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "popupform";
             this.ResumeLayout(false);
 
         }
@@ -71,5 +58,8 @@
 
         private System.Windows.Forms.RichTextBox rtbMessage;
         private System.Windows.Forms.Button btnOk;
+        private System.Windows.Forms.Timer blinkTimer;
+        private System.Windows.Forms.RichTextBox richTextBox;
+        private System.Windows.Forms.Timer timer1;
     }
 }

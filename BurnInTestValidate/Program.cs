@@ -55,7 +55,7 @@ namespace BurnInTestValidate
                 services.AddScoped<DataManagent, DataManagent>();
                 services.AddScoped<IUserService, UserService>();
                 services.AddTransient<FrmBurnIntest>();
-                services.AddSingleton<FrmLogin>();
+               // services.AddSingleton<FrmLogin>();
                 services.AddSingleton<FrmProductSelection>();
                 services.AddSingleton<UserSession>();
             })
