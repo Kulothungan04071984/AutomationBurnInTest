@@ -397,7 +397,7 @@ namespace BurnInTestValidate
                         int index = Array.IndexOf(stages,"262");
 
                         if (index >= 0 && index < stages.Length - 1)
-                            nextidinfo[0] = stages[index];
+                            nextidinfo[0] = stages[index + 1];
                       
                     }
                     catch (Exception)

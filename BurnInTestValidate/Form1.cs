@@ -25,11 +25,14 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+
 //using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Ink;
 using System.Xml.Linq;
+using Tesseract;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Application = FlaUI.Core.Application;
@@ -50,7 +53,7 @@ namespace BurnInTestValidate
         public System.Windows.Forms.Label lblFGValue;
         public System.Windows.Forms.Label lblPCBValue;
         public System.Windows.Forms.Label lblFailValue;
-        public RichTextBox _rtbLog;
+        public System.Windows.Forms.RichTextBox _rtbLog;
         public System.Windows.Forms.Label lblFG;
         public System.Windows.Forms.Label lblserialNoPCBA;
         public IUserService _userService;
@@ -161,7 +164,7 @@ namespace BurnInTestValidate
             this.WindowState = FormWindowState.Maximized;
             this.BackColor = Color.WhiteSmoke;
 
-            Panel topPanel = new Panel();
+            System.Windows.Forms.Panel topPanel = new System.Windows.Forms.Panel();
             topPanel.Dock = DockStyle.Top;
             topPanel.Height = 200;
             topPanel.BackColor = Color.White;
@@ -275,7 +278,7 @@ namespace BurnInTestValidate
             //layout.SetRowSpan(gifBox, 3);
 
 
-            _rtbLog = new RichTextBox();
+            _rtbLog = new System.Windows.Forms.RichTextBox();
             _rtbLog.Dock = DockStyle.Fill;
             _rtbLog.BackColor = Color.Black;
             _rtbLog.ForeColor = Color.Lime;
@@ -336,7 +339,7 @@ namespace BurnInTestValidate
             txtCustomer.Text = customerserialno;
         }
 
-        public async Task<Dictionary<bool,int>> checkCustomerSerialNo(string customerSerialNo, RichTextBox log)
+        public async Task<Dictionary<bool,int>> checkCustomerSerialNo(string customerSerialNo, System.Windows.Forms.RichTextBox log)
         {
             Dictionary<bool, int> checkSNN = new Dictionary<bool, int>();
             try
@@ -366,6 +369,8 @@ namespace BurnInTestValidate
                     //payhistory.StageId = stageid;
                     //payhistory.StageName = stageName;
                     checkSNN =await _userService.Check_Curr_Stage(_pcbSno, stageid.ToString(), "Performance Test", true);
+                    
+                    
                     Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno);
                 }
                 else
@@ -393,7 +398,7 @@ namespace BurnInTestValidate
             else
                 action();
         }
-        public void HwExeKilled(RichTextBox rtb)
+        public void HwExeKilled(System.Windows.Forms.RichTextBox rtb)
         {
             var processes = Process.GetProcessesByName("HWiNFO64");
 
@@ -415,14 +420,14 @@ namespace BurnInTestValidate
            
             var btn = (System.Windows.Forms.Button)sender;
             btn.Enabled = false;
-            var log = (RichTextBox)this.Tag;
+            var log = (System.Windows.Forms.RichTextBox)this.Tag;
             HwExeKilled(log);
             Log(log, " Customerb Serial No :" + txtCustomer.Text.ToString(), Color.Lime);
             string serialFilePath = ConfigurationManager.AppSettings["HWPath"].ToString();
-            //string serialFilePath = @"C:\project\hwi_822\hwi_822";
+           // string serialFilePath = @"C:\project\hwi_822\hwi_822";
             var chkserialNo = await getSerialNo(serialFilePath, log);
             string customerSerialNo = txtCustomer.Text.ToString();
-            //  var chkserialNo = await Task.Run(() => checkCustomerSerialNo(customerSerialNo, log));
+             // var chkserialNo = await Task.Run(() => checkCustomerSerialNo(customerSerialNo, log));
             if (chkserialNo != null && chkserialNo.Any())
             {
                 int value = chkserialNo.Values.FirstOrDefault();
@@ -476,7 +481,7 @@ namespace BurnInTestValidate
 
    
 
-        public async Task<string> DiskPartitionDynamic_NoWMI(RichTextBox log)
+        public async Task<string> DiskPartitionDynamic_NoWMI(System.Windows.Forms.RichTextBox log)
         {
             try
             {
@@ -598,7 +603,7 @@ exit";
                 return "false";
             }
         }
-        private async void RunAutomation(RichTextBox log)
+        private async void RunAutomation(System.Windows.Forms.RichTextBox log)
         {
             Log(log, "Starting automation...", Color.Lime);
             Log(log, "Disk Partition Start", Color.Lime);
@@ -1372,7 +1377,7 @@ cf.ByControlType(ControlType.Window)
                             var txtCylvalue = txtCycles.Patterns.Value.Pattern;
                             if (txtCylvalue != null)
                             {
-                                if (txtCylvalue.ToString() != "11")
+                                if (txtCylvalue.ToString() != "11") //Testing
                                     txtCylvalue.SetValue("11");
                             }
 
@@ -1414,7 +1419,29 @@ cf.ByControlType(ControlType.Window)
                                 Log(log, "Start Test Run Found", System.Drawing.Color.Green);
                             }
 
-                            var prefWindowcyclesWarning = mainWindow.FindFirstDescendant(cf =>
+                            ////Testing
+                            //var elements = mainWindow.FindAllDescendants();
+
+                            //foreach (var el in elements)
+                            //{
+                            //    string name = SafeProp(() => el.Properties.Name.Value);
+                            //    string automationId = SafeProp(() => el.Properties.AutomationId.Value);
+                            //    string className = SafeProp(() => el.Properties.ClassName.Value);
+                            //    string controlType = el.ControlType.ToString();
+                            //    string text = GetElementText(el);
+
+                            //    Log(log, $"---- Element ----", Color.Lime);
+                            //    Log(log, $"Name: {name}", Color.Lime);
+                            //    Log(log, $"AutomationId: {automationId}", Color.Lime);
+                            //    Log(log, $"ClassName: {className}", Color.Lime);
+                            //    Log(log, $"ControlType: {controlType}", Color.Lime);
+                            //    Log(log, $"Label Value (Text): {text}", Color.Lime);
+                            //    //Thread.Sleep(500);
+                            //    //}
+                            //}
+                           
+
+                                var prefWindowcyclesWarning = mainWindow.FindFirstDescendant(cf =>
 cf.ByControlType(ControlType.Window)
  .And(cf.ByName("Getting ready to run Burn in tests")))
 ?.AsWindow();
@@ -1440,7 +1467,8 @@ cf.ByControlType(ControlType.Window)
                             //if (sleepingTime == null)
                             //    sleepingTime = 210000;
 
-                            Thread.Sleep(320000);
+                              Thread.Sleep(320000);
+                            //Thread.Sleep(50000);
                             //                        var windows = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
 
                             //                        foreach (var win in windows)
@@ -1535,10 +1563,13 @@ cf.ByControlType(ControlType.Window)
                                     Log(log, "Crystal DiskMark Fail " + readValue, Color.Red);
                                     writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
                                     payhistory.CrystalReport = "Fail";
-                                    ppfrm.AddText("ERROR: ", Color.Red, true);
-                                    ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
-                                    ppfrm.ShowDialog();
-                                    ppfrm.Focus();
+                                    this.Invoke(new Action(() =>
+                                    {
+                                        ppfrm.AddText("ERROR: ", Color.Red, true);
+                                        ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
+                                        ppfrm.ShowDialog();
+                                        ppfrm.Focus();
+                                    }));
 
                                     return;
                                 }
@@ -1548,10 +1579,13 @@ cf.ByControlType(ControlType.Window)
                                     Log(log, "Crystal DiskMark Fail " + readValue, Color.Red);
                                     writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
                                     payhistory.CrystalReport = "Fail";
-                                    ppfrm.AddText("ERROR: ", Color.Red, true);
-                                    ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
-                                    ppfrm.ShowDialog();
-                                    ppfrm.Focus();
+                                    this.Invoke(new Action(() =>
+                                    {
+                                        ppfrm.AddText("ERROR: ", Color.Red, true);
+                                        ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
+                                        ppfrm.ShowDialog();
+                                        ppfrm.Focus();
+                                    }));
                                     return;
                                 }
                                 count++;
@@ -1581,7 +1615,7 @@ cf.ByControlType(ControlType.Window)
                             //BurmInTest Result Check
 
                             string resultname = string.Empty;
-
+                            Log(log,"Burin In Test Wait", Color.Lime);
                             do
                             {
                                 var burnintestresult = mainWindow.FindFirstDescendant(cf =>
@@ -1596,7 +1630,7 @@ cf.ByControlType(ControlType.Window)
 
                             } while (resultname == string.Empty);
                             Thread.Sleep(1500);
-                        
+
 
 
                             //Testing
@@ -1894,38 +1928,115 @@ cf.ByControlType(ControlType.Window)
                             //    }
 
                             //Testing
-                            payhistory.overall_result = "Pass";
-                            payhistory.burnintest = "Pass";
-                           var nextstage = _userService.Nextstartchecksfcs(_fgName);
-                           _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Completed.", nextstage);
-                            payhistory.CreatedBy = "Admin";
-                            int resultHistory = _userService.inserthistory(payhistory);
-                            if (resultHistory > 0)
+                            string logFilePath = ConfigurationManager.AppSettings["BurnInPath"].ToString();
+                            string filename = "BurnInResultLog";
+                            //string timestamp = DateTime.Now.ToString("ddMMyy_HHmmss");
+                            //string newFileName = $"{filename}_{timestamp}";
+                            //string fullFileName = newFileName + ".txt";
+                            string fullPath = Path.Combine(logFilePath, filename + ".log");
+
+
+
+                            if (!File.Exists(fullPath))
                             {
-                                Log(log, "Test history saved to DB", System.Drawing.Color.Green);
+                                Log(log, "Log file not found: " + fullPath);
+                                return;
+                            }
+
+                            // Get the test run status
+                            string statusFullLine = GetTestRunStatus(fullPath);
+                            Log(log,"Burn In Test: " + statusFullLine,Color.Lime);
+
+                            // Optional: extract only PASSED/FAIL
+                            string statusShort = ExtractPassFail(statusFullLine);
+                            Log(log, "Test Run Status: " + statusShort, Color.Lime);
+
+                            if(payhistory.CrystalReport =="Fail")
+                            {
+                                payhistory.overall_result = "Fail";
+                                payhistory.burnintest = "Fail";
+                                payhistory.CreatedBy = "Admin";
+
+                                var nextstage = _userService.Nextstartchecksfcs(_fgName);
+                                _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Failed.", nextstage);
+
+                                int resultHistory = _userService.inserthistory(payhistory);
+                                Log(log, resultHistory > 0 ? "Fail history saved to DB" : "Failed to save fail history to DB",
+                                    Color.Red);
+
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    frmblink = new Blink();
+                                    frmblink.TopMost = true;
+                                    frmblink.Show();
+
+                                    frmblink.AddText("FAIL:", Color.Red, true);
+                                    frmblink.AddText("Passmark Test Failed.", Color.Red);
+
+                                    if (!string.IsNullOrEmpty(statusFullLine))
+                                    {
+                                        frmblink.AddText("\n" + statusFullLine, Color.White);
+                                    }
+                                });
+                                return;
+                            }
+
+                            if (statusShort == "PASSED")
+                            {
+                                payhistory.overall_result = "Pass";
+                                payhistory.burnintest = "Pass";
+                                payhistory.CreatedBy = "Admin";
+
+                                var nextstage = _userService.Nextstartchecksfcs(_fgName);
+                                _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Completed.", nextstage);
+
+                                int resultHistory = _userService.inserthistory(payhistory);
+                                Log(log, resultHistory > 0 ? "Test history saved to DB" : "Failed to save test history to DB",
+                                    resultHistory > 0 ? Color.Green : Color.Red);
+
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    frmblink = new Blink();
+                                    frmblink.TopMost = true;
+                                    frmblink.Show();
+
+                                    frmblink.AddText("SUCCESS:", Color.Green, true);
+                                    frmblink.AddText("Passmark Test Completed.", Color.Green);
+                                });
+                            }
+                            else if (statusShort == "FAILED")
+                            {
+                                payhistory.overall_result = "Fail";
+                                payhistory.burnintest = "Fail";
+                                payhistory.CreatedBy = "Admin";
+
+                                var nextstage = _userService.Nextstartchecksfcs(_fgName);
+                                _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Failed.", nextstage);
+
+                                int resultHistory = _userService.inserthistory(payhistory);
+                                Log(log, resultHistory > 0 ? "Fail history saved to DB" : "Failed to save fail history to DB",
+                                    Color.Red);
+
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    frmblink = new Blink();
+                                    frmblink.TopMost = true;
+                                    frmblink.Show();
+
+                                    frmblink.AddText("FAIL:", Color.Red, true);
+                                    frmblink.AddText("Passmark Test Failed.", Color.Red);
+
+                                    if (!string.IsNullOrEmpty(statusFullLine))
+                                    {
+                                        frmblink.AddText("\n" + statusFullLine, Color.White);
+                                    }
+                                });
                             }
                             else
                             {
-                                Log(log, "Failed to save test history to DB", System.Drawing.Color.Red);
-
+                                // ⚠️ Unknown status protection
+                                Log(log, "Unknown Test Status: " + statusShort, Color.Orange);
                             }
-                            // Burn In Test Check End
-
-                            //ppfrm.TopMost = true;
-                            //ppfrm.AddText("SUCCESS: ", Color.Green, true);
-                            //ppfrm.AddText("Passmark Test Completed.\n", Color.Green);
-                            //ppfrm.ShowDialog();
-                            //ppfrm.Activate();
-                            this.Invoke((MethodInvoker)delegate
-                            {
-                                frmblink = new Blink();
-                                frmblink.TopMost = true;
-                                frmblink.Show();
-
-                                frmblink.AddText("SUCCESS:", Color.Green, true);
-                                frmblink.AddText("Passmark Test Completed.", Color.Green);
-                            });
-
 
                             if (mainWindowCrystal == null)
                             {
@@ -1961,12 +2072,23 @@ cf.ByControlType(ControlType.Window)
                             payhistory.overall_result = "Fail";
                             Log(log, "error-" + ex.Message.ToString(), System.Drawing.Color.Red);
                             writeErrorMessage(ex.Message.ToString(), "Crystal DiskMark");
-                            ppfrm.AddText("ERROR: ", Color.Red, true);
-                            ppfrm.AddText(ex.Message.ToString(), Color.Black);
+                            //frmblink.TopMost = true;
+                            //frmblink.AddText("ERROR: ", Color.Red, true);
+                            //frmblink.AddText(ex.Message.ToString(), Color.Black);
                             _userService.SQL_Upload(_pcbSno, _customer, true, ex.Message.ToString(),stages);
-                            ppfrm.ShowDialog();
-                            ppfrm.Focus();
-                            ppfrm.Activate();
+                            //frmblink.ShowDialog();
+                            //frmblink.Focus();
+                            //frmblink.Activate();
+
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                frmblink = new Blink();
+                                frmblink.TopMost = true;
+                                frmblink.Show();
+
+                                frmblink.AddText("Error:", Color.Red, true);
+                                frmblink.AddText(ex.Message.ToString(), Color.Green);
+                            });
                             break;
                         }
                         finally
@@ -1974,8 +2096,8 @@ cf.ByControlType(ControlType.Window)
 
                             mainWindow.Close();
                             app.Dispose();
-                           
-                            
+                            //File.Move(fullPath, logFilePathold);
+
 
                         }
 
@@ -2009,7 +2131,7 @@ cf.ByControlType(ControlType.Window)
             return Application.Launch(psi);
         }
 
-        public string drivecheck(RichTextBox log, AutomationElement[] desktopAll)
+        public string drivecheck(System.Windows.Forms.RichTextBox log, AutomationElement[] desktopAll)
         {
             string result = string.Empty;
             try
@@ -2103,7 +2225,7 @@ cf.ByControlType(ControlType.Window)
         //    });
         //}
 
-        public void Log(RichTextBox rtb, string message, Color? color = null)
+        public void Log(System.Windows.Forms.RichTextBox rtb, string message, Color? color = null)
         {
             if (rtb == null) return;
 
@@ -2191,7 +2313,7 @@ cf.ByControlType(ControlType.Window)
         }
        
 
-        public async Task<Dictionary<bool,int>> getSerialNo(string HW_PATH , RichTextBox log)
+        public async Task<Dictionary<bool,int>> getSerialNo(string HW_PATH , System.Windows.Forms.RichTextBox log)
         {
             Dictionary<bool, int> checkSN = new Dictionary<bool, int>();
             try
@@ -2352,7 +2474,9 @@ cf.ByControlType(ControlType.Window)
                                             stageName = stage[1];
 
                                         }
-                                        checkSN =await _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
+
+                                        checkSN = await _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
+
                                         Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno, Color.Lime);
                                     }
                                     else
@@ -2390,7 +2514,7 @@ cf.ByControlType(ControlType.Window)
         }
 
 
-        private async Task ClickButtonByName(AutomationElement root, string containsText,RichTextBox log)
+        private async Task ClickButtonByName(AutomationElement root, string containsText,System.Windows.Forms.RichTextBox log)
         {
             using (var automation = new UIA3Automation())
             {
@@ -2523,5 +2647,82 @@ cf.ByControlType(ControlType.Window)
                 return desktop.FindFirst(TreeScope.Children, dlgCond);
             }
         }
+
+      
+        public string ExtractTextFromImage(string imagePath)
+        {
+            try
+            {
+                using (var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default))
+                using (var img = Pix.LoadFromFile(imagePath))
+                using (var page = engine.Process(img))
+                {
+                    return page.GetText()?.Trim();
+                }
+            }
+            catch (Exception ex)
+            {
+                return $"OCR Error: {ex.Message}";
+            }
+        }
+        public string SafeProp(Func<string> func)
+        {
+            try
+            {
+                var val = func();
+                return string.IsNullOrEmpty(val) ? "null" : val.Trim();
+            }
+            catch
+            {
+                return "not supported";
+            }
+        }
+
+        public static string GetTestRunStatus(string filePath)
+        {
+            try
+            {
+                // Read all lines
+                // string[] lines = File.ReadAllLines(filePath);
+                string[] lines;
+                using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var reader = new StreamReader(stream))
+                {
+                    // Read all lines safely
+                    lines = reader.ReadToEnd().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                }
+
+                // Look for the line that starts with "TEST RUN"
+                foreach (string line in lines)
+                {
+                    string trimmed = line.Trim();
+                    if (trimmed.StartsWith("TEST RUN", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return trimmed; // e.g., "TEST RUN PASSED" or "TEST RUN FAIL"
+                    }
+                }
+
+                return "TEST RUN status not found";
+            }
+            catch (Exception ex)
+            {
+                return "Error reading log: " + ex.Message;
+            }
+        }
+
+        public static string ExtractPassFail(string fullLine)
+        {
+            if (string.IsNullOrWhiteSpace(fullLine))
+                return "UNKNOWN";
+
+            if (fullLine.IndexOf("PASSED", StringComparison.OrdinalIgnoreCase) >= 0)
+                return "PASSED";
+
+            if (fullLine.IndexOf("FAIL", StringComparison.OrdinalIgnoreCase) >= 0)
+                return "FAIL";
+
+            return "UNKNOWN";
+        }
+
     }
 }
