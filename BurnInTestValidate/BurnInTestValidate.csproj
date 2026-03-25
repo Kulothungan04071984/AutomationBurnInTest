@@ -246,6 +246,12 @@
     <Compile Include="DiskPartitionAutomation.Designer.cs">
       <DependentUpon>DiskPartitionAutomation.cs</DependentUpon>
     </Compile>
+    <Compile Include="FailBlink.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FailBlink.Designer.cs">
+      <DependentUpon>FailBlink.cs</DependentUpon>
+    </Compile>
     <Compile Include="FgDetails.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -286,6 +292,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BlinkPopupForm.resx">
       <DependentUpon>BlinkPopupForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FailBlink.resx">
+      <DependentUpon>FailBlink.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>

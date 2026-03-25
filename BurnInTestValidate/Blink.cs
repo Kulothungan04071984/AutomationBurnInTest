@@ -17,9 +17,11 @@ namespace BurnInTestValidate
         private bool isGreenVisible = true;
         private Timer blinkTimer;
         private CancellationTokenSource _cts;
+        public string MessageTest = string.Empty;
         public Blink()
         {
             InitializeComponent();
+            rtbBlinkw.Text=string.Empty;
             rtbBlinkw.ReadOnly = true;
             rtbBlinkw.BorderStyle = BorderStyle.None;
             rtbBlinkw.BackColor = Color.Black;
@@ -71,6 +73,8 @@ namespace BurnInTestValidate
             {
                 if (rtbBlinkw.IsDisposed) return;  // extra safety
 
+                rtbBlinkw.Text = string.Empty;
+                MessageTest = text;
                 rtbBlinkw.Clear();
                 rtbBlinkw.BackColor = Color.Black;
 
@@ -79,7 +83,7 @@ namespace BurnInTestValidate
                 rtbBlinkw.SelectionColor = color;
                 rtbBlinkw.BackColor = Color.Black;
                 rtbBlinkw.ForeColor = Color.Green;
-
+                
                 int lines = rtbBlinkw.Height / rtbBlinkw.Font.Height;
                 for (int i = 0; i < lines / 2; i++)
                     rtbBlinkw.AppendText(Environment.NewLine);
@@ -119,7 +123,7 @@ namespace BurnInTestValidate
             {
                 while (!_cts.Token.IsCancellationRequested)
                 {
-                    AddText("Pass Mark Test Completed...", Color.Green);
+                    AddText("PassMark Test Completed....", Color.Green);
                     Thread.Sleep(500);
                 }
             });

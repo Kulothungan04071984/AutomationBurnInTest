@@ -75,16 +75,16 @@ namespace BurnInTestValidate
                     sqlCommand.Parameters.AddWithValue("@PCBAID", objHistory.PCBAID);
                     sqlCommand.Parameters.AddWithValue("@DiskPartition", objHistory.DiskPartition);
                     sqlCommand.Parameters.AddWithValue("@CrystalReport", objHistory.CrystalReport);
-                    sqlCommand.Parameters.AddWithValue("@read_one", objHistory.read_one);
-                    sqlCommand.Parameters.AddWithValue("@read_two", objHistory.read_two);
-                    sqlCommand.Parameters.AddWithValue("@read_three", objHistory.read_three);
-                    sqlCommand.Parameters.AddWithValue("@read_four", objHistory.read_four);
-                    sqlCommand.Parameters.AddWithValue("@write_one", objHistory.write_one);
-                    sqlCommand.Parameters.AddWithValue("@write_two", objHistory.write_two);
-                    sqlCommand.Parameters.AddWithValue("@write_three", objHistory.write_three);
-                    sqlCommand.Parameters.AddWithValue("@write_four", objHistory.write_four);
-                    sqlCommand.Parameters.AddWithValue("@burnintest", objHistory.burnintest);
-                    sqlCommand.Parameters.AddWithValue("@overall_result", objHistory.overall_result);
+                    sqlCommand.Parameters.AddWithValue("@read_one", string.IsNullOrEmpty(objHistory.read_one) ? "0" : objHistory.read_one);
+                    sqlCommand.Parameters.AddWithValue("@read_two", string.IsNullOrEmpty(objHistory.read_two) ? "0" : objHistory.read_two);
+                    sqlCommand.Parameters.AddWithValue("@read_three", string.IsNullOrEmpty(objHistory.read_three) ? "0" : objHistory.read_three);
+                    sqlCommand.Parameters.AddWithValue("@read_four", string.IsNullOrEmpty(objHistory.read_four) ? "0" : objHistory.read_four);
+                    sqlCommand.Parameters.AddWithValue("@write_one", string.IsNullOrEmpty(objHistory.write_one) ? "0" : objHistory.write_one);
+                    sqlCommand.Parameters.AddWithValue("@write_two", string.IsNullOrEmpty(objHistory.write_two) ? "0" : objHistory.write_two);
+                    sqlCommand.Parameters.AddWithValue("@write_three", string.IsNullOrEmpty(objHistory.write_three) ? "0" : objHistory.write_three);
+                    sqlCommand.Parameters.AddWithValue("@write_four", string.IsNullOrEmpty(objHistory.write_four) ? "0" : objHistory.write_four);
+                    sqlCommand.Parameters.AddWithValue("@burnintest", string.IsNullOrEmpty(objHistory.burnintest) ? "0" : objHistory.burnintest);
+                    sqlCommand.Parameters.AddWithValue("@overall_result", string.IsNullOrEmpty(objHistory.overall_result) ? "0" : objHistory.overall_result);
                     sqlCommand.Parameters.AddWithValue("@createid", objHistory.CreatedBy);
                     sqlConnection.Open();
                     result = sqlCommand.ExecuteNonQuery();
@@ -201,16 +201,47 @@ namespace BurnInTestValidate
             }
         }
 
+        public int getReworkCount(string PcbSno)
+        {
+            int reworkresult = 0;
+            var getcon = _ConnectionString.CreateConnection(DatabaseType.BurnIn);
+
+            try
+            {
+                using (SqlCommand countCmd = new SqlCommand("pro_getReworkCount", getcon))
+                {
+                    countCmd.CommandType = CommandType.StoredProcedure;
+                    countCmd.Parameters.AddWithValue("@PcbSno", PcbSno);
+                    getcon.Open();
+                    object result = countCmd.ExecuteScalar();
+                    reworkresult = (result != null) ? Convert.ToInt32(result) : 0;
+                    getcon.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                reworkresult = 0;
+            }
+            return reworkresult;
+        }
         public string SQL_Upload(string PcbSno, string CusSno, bool boardfail, string Result_Remarks , string[] stage)
         {
             var con = _ConnectionString.CreateConnection(DatabaseType.BurnIn);
             string sqluploadresult = string.Empty;
             if (stage.Length > 1)
             {
-                lbl_app_id = stage[0].ToString();
-                lblstagename = stage[1].ToString();
+                lbl_app_id = "262";
+                lblstagename = "Performance Test";
             }
-           
+            //var stagenext = Nextstartchecksfcs(CusSno);
+            //if (stagenext != null)
+            //{
+            //    nextidinfo[0] = stagenext[0];
+            //    nextidinfo[1]= stagenext[1];
+            //}
+            int failcount = boardfail == true ? 1 : 0;
+            var checkReworkcount = getReworkCount(PcbSno);
+            int boardfailcountnew = checkReworkcount + failcount;
             try
             {
                 con.Close();
@@ -265,8 +296,9 @@ namespace BurnInTestValidate
 
                     SqlCommand cmd = new SqlCommand(
                         "UPDATE PCBA_NextStage SET " +
-                        "Next_Stage_Id = '" + (boardfail ? (boardfailcount > 1 ? reworkidinfo[0] : lbl_app_id) : nextidinfo[0]) + "', " +
-                        "Next_Stage_Name = '" + (boardfail ? (boardfailcount > 1 ? reworkidinfo[1] : lblstagename) : nextidinfo[1]) + "', " +
+                        "Next_Stage_Id = '" + (boardfail ? (boardfailcountnew > 2 ? reworkidinfo[0] : lbl_app_id) : nextidinfo[0]) + "', " +
+                        "Next_Stage_Name = '" + (boardfail ? (boardfailcountnew > 2 ? reworkidinfo[1] : lblstagename) : nextidinfo[1]) + "', " +
+                        "Rework_Count = '" + boardfailcountnew + "'," +
                         "Previous_Stage = '" + lblstagename + "', " +
                         "Update_timestamp = FORMAT(CURRENT_TIMESTAMP,'dd-MM-yyyy HH:mm:ss.ffff'), " +
                         "Update_Machine_id = HOST_NAME(), " +
@@ -397,7 +429,7 @@ namespace BurnInTestValidate
                         int index = Array.IndexOf(stages,"262");
 
                         if (index >= 0 && index < stages.Length - 1)
-                            nextidinfo[0] = stages[index + 1];
+                            nextidinfo[0] = stages[index +1];
                       
                     }
                     catch (Exception)

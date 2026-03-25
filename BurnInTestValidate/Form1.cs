@@ -63,6 +63,7 @@ namespace BurnInTestValidate
         int PartitionCount = 0;
         popupform ppfrm = new popupform();
         Blink frmblink = new Blink();
+        FailBlink frmFailLink =new FailBlink ();
         //  Autopopclose appfrm = new Autopopclose();
         // BlinkPopupForm popup = new BlinkPopupForm(6000);
 
@@ -1467,8 +1468,8 @@ cf.ByControlType(ControlType.Window)
                             //if (sleepingTime == null)
                             //    sleepingTime = 210000;
 
-                              Thread.Sleep(320000);
-                            //Thread.Sleep(50000);
+                            Thread.Sleep(320000); //Testing
+                           // Thread.Sleep(50000);
                             //                        var windows = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
 
                             //                        foreach (var win in windows)
@@ -1557,7 +1558,7 @@ cf.ByControlType(ControlType.Window)
                                 else if (automationId == "1017")
                                     payhistory.write_four = readValue;
                                 // ❌ FAIL case
-                                if (readValue == "0")
+                             if (readValue == "0")
                                 {
                                     _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
                                     Log(log, "Crystal DiskMark Fail " + readValue, Color.Red);
@@ -1951,37 +1952,9 @@ cf.ByControlType(ControlType.Window)
                             string statusShort = ExtractPassFail(statusFullLine);
                             Log(log, "Test Run Status: " + statusShort, Color.Lime);
 
-                            if(payhistory.CrystalReport =="Fail")
-                            {
-                                payhistory.overall_result = "Fail";
-                                payhistory.burnintest = "Fail";
-                                payhistory.CreatedBy = "Admin";
+                         
 
-                                var nextstage = _userService.Nextstartchecksfcs(_fgName);
-                                _userService.SQL_Upload(_pcbSno, _customer, false, "Passmark Test Failed.", nextstage);
-
-                                int resultHistory = _userService.inserthistory(payhistory);
-                                Log(log, resultHistory > 0 ? "Fail history saved to DB" : "Failed to save fail history to DB",
-                                    Color.Red);
-
-                                this.Invoke((MethodInvoker)delegate
-                                {
-                                    frmblink = new Blink();
-                                    frmblink.TopMost = true;
-                                    frmblink.Show();
-
-                                    frmblink.AddText("FAIL:", Color.Red, true);
-                                    frmblink.AddText("Passmark Test Failed.", Color.Red);
-
-                                    if (!string.IsNullOrEmpty(statusFullLine))
-                                    {
-                                        frmblink.AddText("\n" + statusFullLine, Color.White);
-                                    }
-                                });
-                                return;
-                            }
-
-                            if (statusShort == "PASSED")
+                            if (statusShort == "PASSED" && payhistory.CrystalReport == "Pass")
                             {
                                 payhistory.overall_result = "Pass";
                                 payhistory.burnintest = "Pass";
@@ -2004,7 +1977,7 @@ cf.ByControlType(ControlType.Window)
                                     frmblink.AddText("Passmark Test Completed.", Color.Green);
                                 });
                             }
-                            else if (statusShort == "FAILED")
+                            else if (statusShort == "FAILED" || payhistory.CrystalReport == "Fail")
                             {
                                 payhistory.overall_result = "Fail";
                                 payhistory.burnintest = "Fail";
@@ -2019,16 +1992,16 @@ cf.ByControlType(ControlType.Window)
 
                                 this.Invoke((MethodInvoker)delegate
                                 {
-                                    frmblink = new Blink();
-                                    frmblink.TopMost = true;
-                                    frmblink.Show();
+                                    frmFailLink = new FailBlink();
+                                    frmFailLink.TopMost = true;
+                                    frmFailLink.Show();
 
-                                    frmblink.AddText("FAIL:", Color.Red, true);
-                                    frmblink.AddText("Passmark Test Failed.", Color.Red);
+                                    frmFailLink.AddText("FAIL:", Color.Red, true);
+                                    frmFailLink.AddText("Passmark Test Failed.", Color.Red);
 
                                     if (!string.IsNullOrEmpty(statusFullLine))
                                     {
-                                        frmblink.AddText("\n" + statusFullLine, Color.White);
+                                        frmFailLink.AddText("\n" + statusFullLine, Color.White);
                                     }
                                 });
                             }
@@ -2095,7 +2068,36 @@ cf.ByControlType(ControlType.Window)
                         {
 
                             mainWindow.Close();
-                            app.Dispose();
+                            //app.Dispose();
+                            if (payhistory.CrystalReport == "Fail")
+                            {
+                                payhistory.overall_result = "Fail";
+                                payhistory.burnintest = "Fail";
+                                payhistory.CreatedBy = "Admin";
+
+                                var nextstage = _userService.Nextstartchecksfcs(_fgName);
+                                _userService.SQL_Upload(_pcbSno, _customer, true, "Passmark Test Failed.", nextstage);
+
+                                int resultHistory = _userService.inserthistory(payhistory);
+                                Log(log, resultHistory > 0 ? "Fail history saved to DB" : "Failed to save fail history to DB",
+                                    Color.Red);
+
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    frmFailLink = new FailBlink();
+                                    frmFailLink.TopMost = true;
+                                    frmFailLink.Show();
+
+                                    frmFailLink.AddText("FAIL:", Color.Red, true);
+                                    frmFailLink.AddText("Passmark Test Failed.", Color.Red);
+
+                                    //if (!string.IsNullOrEmpty(statusFullLine))
+                                    //{
+                                    //    frmblink.AddText("\n" + statusFullLine, Color.White);
+                                    //}
+                                });
+                              
+                            }
                             //File.Move(fullPath, logFilePathold);
 
 
