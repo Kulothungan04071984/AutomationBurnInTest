@@ -418,12 +418,19 @@ namespace BurnInTestValidate
         }
         private async void btnStart_Click(object sender, EventArgs e)
         {
-           
+            
             var btn = (System.Windows.Forms.Button)sender;
             btn.Enabled = false;
             var log = (System.Windows.Forms.RichTextBox)this.Tag;
             HwExeKilled(log);
-            Log(log, " Customerb Serial No :" + txtCustomer.Text.ToString(), Color.Lime);
+            string elogFilePath = ConfigurationManager.AppSettings["BurnInPath"].ToString();
+            string efilename = "BurnInResultLog";
+            string efullPath = Path.Combine(elogFilePath, efilename + ".log");
+            if (File.Exists(efullPath))
+            {
+                File.Delete(efullPath );
+            }
+                Log(log, " Customerb Serial No :" + txtCustomer.Text.ToString(), Color.Lime);
             string serialFilePath = ConfigurationManager.AppSettings["HWPath"].ToString();
            // string serialFilePath = @"C:\project\hwi_822\hwi_822";
             var chkserialNo = await getSerialNo(serialFilePath, log);
@@ -1464,11 +1471,11 @@ cf.ByControlType(ControlType.Window)
 
 
                             Log(log, "Task Running", Color.Lime);
-                            //int sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["sleep"].ToString());
+                            int sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["Sleep"].ToString());
                             //if (sleepingTime == null)
                             //    sleepingTime = 210000;
-
-                            Thread.Sleep(320000); //Testing
+                            Log(log,sleepingTime.ToString(),Color.Lime);
+                            Thread.Sleep(sleepingTime); //Testing
                            // Thread.Sleep(50000);
                             //                        var windows = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
 
@@ -1512,7 +1519,7 @@ cf.ByControlType(ControlType.Window)
                                 do
                                 {
                                     Thread.Sleep(500);
-                                    // Log(log, " D:Waiting for Crystal Test to complete... --" + cryCheck.Name);
+                                     Log(log, " D:Waiting for Crystal Test to complete... --" + cryCheck.Name);
                                 } while (cryCheck.Name != "All");
                             }
                             Log(log, " D:Crystal Test to completed", Color.Lime);
@@ -1627,7 +1634,7 @@ cf.ByControlType(ControlType.Window)
 
                                 Thread.Sleep(1000);
                                 string name = burnintestresult == null ? "N/A" : burnintestresult.Name;
-                                //Log(log, "Waiting for Burn In Test to complete... " + name, Color.Lime);
+                                Log(log, "Waiting for Burn In Test to complete... " + name, Color.Lime);
 
                             } while (resultname == string.Empty);
                             Thread.Sleep(1500);
@@ -1930,11 +1937,17 @@ cf.ByControlType(ControlType.Window)
 
                             //Testing
                             string logFilePath = ConfigurationManager.AppSettings["BurnInPath"].ToString();
+                            if (!Directory.Exists(logFilePath))
+                            {
+                                Directory.CreateDirectory(logFilePath);
+                            }
                             string filename = "BurnInResultLog";
                             //string timestamp = DateTime.Now.ToString("ddMMyy_HHmmss");
                             //string newFileName = $"{filename}_{timestamp}";
                             //string fullFileName = newFileName + ".txt";
+                            
                             string fullPath = Path.Combine(logFilePath, filename + ".log");
+                            Log(log, fullPath, Color.Lime);
 
 
 
@@ -2096,7 +2109,7 @@ cf.ByControlType(ControlType.Window)
                                     //    frmblink.AddText("\n" + statusFullLine, Color.White);
                                     //}
                                 });
-                              
+                                Thread.Sleep(2000);
                             }
                             //File.Move(fullPath, logFilePathold);
 

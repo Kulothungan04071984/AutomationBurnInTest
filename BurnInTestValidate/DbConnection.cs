@@ -350,7 +350,18 @@ namespace BurnInTestValidate
                 //Fill_Response_Data("SFCS FCT Update Failed.");
                 sqluploadresult = "SFCS FCT Update Failed.";
             }
+            try
+            {
 
+            }
+            catch (Exception ex)
+            {
+            }
+            if (boardfail)
+            {
+                var machinename = Environment.MachineName;
+               var failcountinsert = insertFailCountCheck(PcbSno, CusSno, boardfailcountnew.ToString(), lblstagename, machinename);
+            }
             //try
             //{
             //    con.Close();
@@ -402,7 +413,35 @@ namespace BurnInTestValidate
             return sqluploadresult;
         }
 
+        public int insertFailCountCheck(string pcbid, string workorder, string rowcount, string stagename, string machinename)
+        {
+            int insertresult = 0;
+            var insertcon= _ConnectionString.CreateConnection(DatabaseType.BurnIn);
+            try
+            {
+                using(SqlCommand cmd=new SqlCommand ("pro_insertTESTINGFAILCOUNTCHECK_ESSENCORE",insertcon))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@WORKORDER", workorder);
+                    cmd.Parameters.AddWithValue("@Test", stagename);
+                    cmd.Parameters.AddWithValue("@PCBAID", pcbid);
+                    cmd.Parameters.AddWithValue("@Reworkcount", rowcount);
+                    cmd.Parameters.AddWithValue("@Result", "Fail");
+                    cmd.Parameters.AddWithValue("@ErrorCode", "Fail");
+                    cmd.Parameters.AddWithValue("@ERRORDESC", "performance Test Fail Crystal Report/ BurnIn Test");
+                    cmd.Parameters.AddWithValue("@UPDATEMACHINE", machinename);
+                    insertcon.Open();
+                    insertresult=cmd.ExecuteNonQuery();
+                    insertcon.Close();
+                   return insertresult;
 
+                }
+            }
+            catch (Exception ex) { 
+                insertcon.Close();
+                return insertresult;
+            }
+        }
 
         public async Task<string[]> startchecksfcs(string FgNumber)
         {

@@ -17,6 +17,7 @@ namespace BurnInTestValidate
         private System.Windows.Forms.Timer blinkTimer;
         private CancellationTokenSource _cts;
         public string MessageTest = string.Empty;
+        public System.Windows.Forms.Timer autoCloseTimer;
         public FailBlink()
         {
             InitializeComponent();
@@ -31,8 +32,17 @@ namespace BurnInTestValidate
             timer1.Interval = 500; // blink speed
             timer1.Tick += timer1_Tick;
             timer1.Start();
-        }
 
+        //    autoCloseTimer = new System.Windows.Forms.Timer();
+        //    autoCloseTimer.Interval = 1000; // 1 second
+        //    autoCloseTimer.Tick += AutoCloseTimer_Tick;
+        //    autoCloseTimer.Start(); // <-- missing line
+        }
+        //private void AutoCloseTimer_Tick(object sender, EventArgs e)
+        //{
+        //    autoCloseTimer.Stop();
+        //    this.Close();
+        //}
         private void timer1_Tick(object sender, EventArgs e)
         {
             if (rtbFail.IsDisposed) return;

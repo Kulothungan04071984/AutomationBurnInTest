@@ -14,6 +14,7 @@ namespace BurnInTestValidate
     {
         
         bool isRed = true;
+        private Timer autoCloseTimer;
         public popupform()
         {
             InitializeComponent();
@@ -26,8 +27,20 @@ namespace BurnInTestValidate
 
             timer1.Interval = 500; // blinking speed (milliseconds)
             timer1.Tick += timer1_Tick;
-        }
 
+            if (autoCloseTimer == null)
+            {
+                autoCloseTimer = new Timer();
+                autoCloseTimer.Interval = 2000;
+                autoCloseTimer.Tick += AutoCloseTimer_Tick;
+            }
+        }
+        private void AutoCloseTimer_Tick(object sender, EventArgs e)
+        {
+            autoCloseTimer.Stop();
+            timer1.Stop(); // stop blinking
+            this.Close();
+        }
         public void AddText(string text, Color color, bool bold = false)
         {
             if (richTextBox.InvokeRequired)
@@ -51,10 +64,12 @@ namespace BurnInTestValidate
             richTextBox.AppendText(text);
 
             timer1.Start();
+            autoCloseTimer.Start();
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            autoCloseTimer?.Stop();
             timer1.Stop();
             this.Close();
         }
