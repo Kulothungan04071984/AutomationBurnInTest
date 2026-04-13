@@ -94,8 +94,9 @@ namespace BurnInTestValidate
             return result;
         }
          
-        public async Task<Dictionary<bool,int>> Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
+        public async Task<services> Check_Curr_Stage(string serialno, string app_id, string stage, bool boardonline = true)
         {
+            services _services=new services ();
             bool checkCurrStageResult = false;
 
             Dictionary<bool, int> result = new Dictionary<bool, int>();
@@ -121,7 +122,10 @@ namespace BurnInTestValidate
                                 //Fill_Response_Data("Board Waiting ID : " + sdr["Next_Stage_id"].ToString());
                                 //Fill_Response_Data("Board Workorder : " + infosfromboard[0]);
                                 //Fill_Response_Data("Board RW : " + infosfromboard[1]);
-
+                                _services.CurrentStageid = sdr["Next_Stage_id"].ToString();
+                                _services.stageid = app_id;
+                                _services.CurrentStageName = sdr["Next_Stage_name"].ToString();
+                                _services.StageName = stage;
                                 if (sdr["Next_Stage_id"].ToString() == app_id)
                                 {
                                     con.Close();
@@ -152,13 +156,13 @@ namespace BurnInTestValidate
                     checkCurrStageResult = true;
                 }
                 result.Add(checkCurrStageResult, boardfailcount);
-
-                return result;
+                _services.resultset = result;
+                return _services;
             }
             catch (Exception ex)
             {
                 checkCurrStageResult = false;
-                return result;
+                return _services;
             }
         }
 
@@ -242,6 +246,26 @@ namespace BurnInTestValidate
             int failcount = boardfail == true ? 1 : 0;
             var checkReworkcount = getReworkCount(PcbSno);
             int boardfailcountnew = checkReworkcount + failcount;
+            int Reworkcountresult = 0;
+            if (boardfail)
+            {
+                if (boardfailcountnew > 2)
+                {
+                    Reworkcountresult = 1;
+                }
+                else if (boardfailcountnew > 5)
+                {
+                    Reworkcountresult = 2;
+                }
+                else if (boardfailcountnew > 8)
+                {
+                    Reworkcountresult = 3;
+                }
+                else
+                {
+                    Reworkcountresult = 0;
+                }
+            }
             try
             {
                 con.Close();
@@ -296,9 +320,9 @@ namespace BurnInTestValidate
 
                     SqlCommand cmd = new SqlCommand(
                         "UPDATE PCBA_NextStage SET " +
-                        "Next_Stage_Id = '" + (boardfail ? (boardfailcountnew > 2 ? reworkidinfo[0] : lbl_app_id) : nextidinfo[0]) + "', " +
-                        "Next_Stage_Name = '" + (boardfail ? (boardfailcountnew > 2 ? reworkidinfo[1] : lblstagename) : nextidinfo[1]) + "', " +
-                        "Rework_Count = '" + boardfailcountnew + "'," +
+                        "Next_Stage_Id = '" + (boardfail ? (Reworkcountresult >=1 ? reworkidinfo[0] : lbl_app_id) : nextidinfo[0]) + "', " +
+                        "Next_Stage_Name = '" + (boardfail ? (Reworkcountresult >=1 ? reworkidinfo[1] : lblstagename) : nextidinfo[1]) + "', " +
+                        "Rework_Count = '" + Reworkcountresult + "'," +
                         "Previous_Stage = '" + lblstagename + "', " +
                         "Update_timestamp = FORMAT(CURRENT_TIMESTAMP,'dd-MM-yyyy HH:mm:ss.ffff'), " +
                         "Update_Machine_id = HOST_NAME(), " +
@@ -313,6 +337,11 @@ namespace BurnInTestValidate
                     con.Close();
                     //Fill_Response_Data("Next Stage : " + (boardfail ? reworkidinfo[1] : nextidinfo[1]));
                     //Fill_Response_Data("SFCS Next Stage Update Success.");
+                    if (boardfail)
+                    {
+                        var machinename = Environment.MachineName;
+                        var failcountinsert = insertFailCountCheck(PcbSno, CusSno, boardfailcountnew.ToString(), lblstagename, machinename);
+                    }
                     sqluploadresult = "SFCS Next Stage Update Success." + "Next Stage : " + (boardfail ? reworkidinfo[1] : stage[1]);
                     break;
                 }
@@ -357,11 +386,7 @@ namespace BurnInTestValidate
             catch (Exception ex)
             {
             }
-            if (boardfail)
-            {
-                var machinename = Environment.MachineName;
-               var failcountinsert = insertFailCountCheck(PcbSno, CusSno, boardfailcountnew.ToString(), lblstagename, machinename);
-            }
+            
             //try
             //{
             //    con.Close();
@@ -684,30 +709,42 @@ namespace BurnInTestValidate
 
         public async Task<FgDetails> GetFgDetails(int productId, string cusNumber)
         {
-            FgDetails details = null;
-            using (SqlConnection sqlConnection = _ConnectionString.CreateConnection(Program.DatabaseType.Reporting))
+            FgDetails details = new FgDetails();
+            try
             {
-                using (SqlCommand sqlCommand = new SqlCommand("Pro_getFgDetails", sqlConnection))
+               
+                using (SqlConnection sqlConnection = _ConnectionString.CreateConnection(Program.DatabaseType.Reporting))
                 {
-                    sqlCommand.CommandType = System.Data.CommandType.StoredProcedure;
-                    sqlCommand.Parameters.AddWithValue("@producttype", productId);
-                    sqlCommand.Parameters.AddWithValue("@customerserialnumber", cusNumber);
-                    sqlConnection.Open();
-                    using (SqlDataReader reader = sqlCommand.ExecuteReader())
+                    using (SqlCommand sqlCommand = new SqlCommand("Pro_getFgDetails", sqlConnection))
                     {
-                        if (reader.Read())
+                        sqlCommand.CommandType = System.Data.CommandType.StoredProcedure;
+                        sqlCommand.Parameters.AddWithValue("@producttype", productId);
+                        sqlCommand.Parameters.AddWithValue("@customerserialnumber", cusNumber);
+                        sqlConnection.Open();
+                        using (SqlDataReader reader = sqlCommand.ExecuteReader())
                         {
-                            details = new FgDetails
+                            if (reader.Read())
                             {
-                                FgName = reader["FgNumber"].ToString(),
-                                ProductType = reader["PCBSerialNo"].ToString(),
-                            };
+                                details = new FgDetails
+                                {
+                                    FgName = reader["FgNumber"].ToString(),
+                                    ProductType = reader["PCBSerialNo"].ToString(),
+                                    error = "false"
+                                };
+                            }
                         }
+                        sqlConnection.Close();
                     }
-                    sqlConnection.Close();
                 }
+                return details;
             }
-            return details;
+            catch(Exception ex)
+            {
+                // Handle exception (e.g., log it)
+                details.error = ex.Message;
+                return details;
+            }
+         
 
         }
     }

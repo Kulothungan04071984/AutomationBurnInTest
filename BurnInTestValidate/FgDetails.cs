@@ -12,5 +12,7 @@ namespace BurnInTestValidate
         public string ProductType { get; set; }
          public string Customer { get; set; }
         public string PCBAID { get; set; }
+
+        public string error { get; set; }
     }
 }

@@ -48,6 +48,8 @@ namespace BurnInTestValidate
     {
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.TextBox txtCustomer;
+        public System.Windows.Forms.ComboBox cmbCustomer;
+
         private System.Windows.Forms.Timer barcodeTimer = new System.Windows.Forms.Timer();
         public System.Windows.Forms.Label lblCount;
         public System.Windows.Forms.Label lblFGValue;
@@ -77,10 +79,12 @@ namespace BurnInTestValidate
         public string _fgName;
         public string _pcbSno;
         public UserSession _session;
-        public FgDetails _fgDetails;
+        FgDetails _fgDetails = new FgDetails ();
+        services _servies = new services();
         public string filenameNow=string.Empty;
         public int stageid = 0;
         public string stageName = string.Empty;
+        public int sleepingTime = 0;
         //public FrmBurnIntest(IUserService userService,UserSession userSession, string customer,
         //string productTypeName, int productTypeId,
         //string fgName, FgDetails fgDetails)
@@ -173,7 +177,7 @@ namespace BurnInTestValidate
 
             TableLayoutPanel layout = new TableLayoutPanel();
             layout.Dock = DockStyle.Fill;
-            layout.ColumnCount = 3;
+            layout.ColumnCount = 4;
             layout.RowCount = 5;
 
            
@@ -195,6 +199,14 @@ namespace BurnInTestValidate
             txtCustomer.Dock = DockStyle.Fill;
             txtCustomer.Font = new Font("Segoe UI", 11);
             txtCustomer.Width = 300;
+
+            cmbCustomer = new System.Windows.Forms.ComboBox();
+            cmbCustomer.Dock = DockStyle.Fill;
+            cmbCustomer.Font = new Font("Segoe UI", 10);
+            cmbCustomer.Width = 300;
+            cmbCustomer.Anchor = AnchorStyles.Right;
+            cmbCustomer.Items.AddRange(new string[] { "Select Product Size", "1TB", "512GB", "256GB" });
+            cmbCustomer.SelectedIndex = 0;
 
             Label lblProduct = new Label();
             lblProduct.Text = "Product Type : M.2";
@@ -238,6 +250,7 @@ namespace BurnInTestValidate
             layout.Controls.Add(txtCustomer, 1, 0);
 
             layout.Controls.Add(lblProduct, 0, 1);
+            layout.Controls.Add(cmbCustomer, 1, 1);
 
             layout.Controls.Add(lblFG, 0, 2);
            
@@ -369,7 +382,7 @@ namespace BurnInTestValidate
                     }
                     //payhistory.StageId = stageid;
                     //payhistory.StageName = stageName;
-                    checkSNN =await _userService.Check_Curr_Stage(_pcbSno, stageid.ToString(), "Performance Test", true);
+                    _servies =await _userService.Check_Curr_Stage(_pcbSno, stageid.ToString(), "Performance Test", true);
                     
                     
                     Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno);
@@ -417,12 +430,35 @@ namespace BurnInTestValidate
             }
         }
         private async void btnStart_Click(object sender, EventArgs e)
-        {
-            
+        {            
             var btn = (System.Windows.Forms.Button)sender;
             btn.Enabled = false;
             var log = (System.Windows.Forms.RichTextBox)this.Tag;
             HwExeKilled(log);
+            if(cmbCustomer.SelectedIndex == 0)
+            {
+                Log(log, "Please select a product size from the dropdown.", Color.Red);
+                System.Windows.Forms.MessageBox.Show("Please select a product size from the dropdown.", "Input Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                cmbCustomer.Focus();
+                btnStart.Enabled= true;
+                return;
+            }
+            else
+            {
+                if(cmbCustomer.SelectedItem.ToString() == "1TB")
+                {
+                   sleepingTime= Convert.ToInt32(ConfigurationManager.AppSettings["Sleep"].ToString());
+                }
+                else if(cmbCustomer.SelectedItem.ToString() == "500GB")
+                {
+                    sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["Sleep500"].ToString());
+                }
+                else if (cmbCustomer.SelectedItem.ToString() == "250GB")
+                {
+                    sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["Sleep250"].ToString());
+                }
+                btnStart.Enabled = false;
+            }
             string elogFilePath = ConfigurationManager.AppSettings["BurnInPath"].ToString();
             string efilename = "BurnInResultLog";
             string efullPath = Path.Combine(elogFilePath, efilename + ".log");
@@ -432,53 +468,72 @@ namespace BurnInTestValidate
             }
                 Log(log, " Customerb Serial No :" + txtCustomer.Text.ToString(), Color.Lime);
             string serialFilePath = ConfigurationManager.AppSettings["HWPath"].ToString();
-           // string serialFilePath = @"C:\project\hwi_822\hwi_822";
-            var chkserialNo = await getSerialNo(serialFilePath, log);
-            string customerSerialNo = txtCustomer.Text.ToString();
-             // var chkserialNo = await Task.Run(() => checkCustomerSerialNo(customerSerialNo, log));
-            if (chkserialNo != null && chkserialNo.Any())
-            {
-                int value = chkserialNo.Values.FirstOrDefault();
+            // string serialFilePath = @"C:\project\hwi_822\hwi_822";
+             var chkserialNo = await getSerialNo(serialFilePath, log);
 
-                if (lblFailValue != null)
+            //Dictionary<bool, int> checkSNnew = new Dictionary<bool, int>();
+            //checkSNnew.Add(true, 0);
+            //_servies.resultset = checkSNnew;
+            //_servies.StageName = "Performance Test";
+            //_servies.stageid = "262";
+            //var chkserialNo = _servies;
+
+            string customerSerialNo = txtCustomer.Text.ToString();
+            // var chkserialNo = await Task.Run(() => checkCustomerSerialNo(customerSerialNo, log));
+
+            if (chkserialNo != null && chkserialNo.resultset != null)
+            {
+                if (chkserialNo.resultset.Any())
                 {
-                    if (this.InvokeRequired)
+                    Log(log, "Expected StageName, Stage ID" + "- " + chkserialNo.StageName + "," + chkserialNo.stageid + " , CurrentStage Name , Current Stage id - " + chkserialNo.CurrentStageName + "," + chkserialNo.CurrentStageid, Color.Lime);
+                    int value = chkserialNo.resultset.Values.FirstOrDefault();
+
+                    if (lblFailValue != null)
                     {
-                        this.Invoke(new Action(() =>
+                        if (this.InvokeRequired)
+                        {
+                            this.Invoke(new Action(() =>
+                            {
+                                lblFailValue.Text = "Fail Count : " + value;
+                            }));
+                        }
+                        else
                         {
                             lblFailValue.Text = "Fail Count : " + value;
-                        }));
-                    }
-                    else
-                    {
-                        lblFailValue.Text = "Fail Count : " + value;
+                        }
                     }
                 }
+
+                if (chkserialNo.resultset.ContainsKey(false))
+                {
+                    writeErrorMessage("Expexted StageName, Stage ID" + "-" + chkserialNo.StageName + "," + chkserialNo.stageid + " but CurrentStage Name , Current Stage id " + chkserialNo.CurrentStageName + "," + chkserialNo.CurrentStageid + "-Stage MissMatch/Serial No Not Found", serialFilePath);
+                    Log(log, "Expexted StageName, Stage ID" + "-" + chkserialNo.StageName + "," + chkserialNo.stageid + " but CurrentStage Name , Current Stage id - " + chkserialNo.CurrentStageName + "," + chkserialNo.CurrentStageid + "-Stage MissMatch/Serial No Not Found", Color.Red);
+
+                    _userService.SQL_Upload(_pcbSno, _customer, true, "Stage MissMatch/Serial No Not Found", stages);
+                    return;
+                }
             }
-            if (chkserialNo.ContainsKey(false))
+            else
             {
-                writeErrorMessage("Stage MissMatch/Serial No Not Found", serialFilePath);
-                Log(log,"Stage MissMatch/Serial No Not Found",Color.Red);
-              
-                _userService.SQL_Upload(_pcbSno, _customer, true, "Stage MissMatch/Serial No Not Found",stages);
+                Log(log, "Serial Number Not Exists In SSD Card", Color.Red);
                 return;
             }
-          
-            try
-            {
-               
-                await Task.Run(() => RunAutomation(log));
-            }
-            catch (Exception ex)
-            {
-                writeErrorMessage(ex.Message.ToString(), "btnStart_Click");
-                Log(log, $"ERROR: {ex.Message}", System.Drawing.Color.Red);
-                _userService.SQL_Upload(_pcbSno, _customer, true, ex.Message.ToString(),stages);
-            }
-            finally
-            {
-                btn.Enabled = true;
-            }
+
+                try
+                {
+
+                    await Task.Run(() => RunAutomation(log));
+                }
+                catch (Exception ex)
+                {
+                    writeErrorMessage(ex.Message.ToString(), "btnStart_Click");
+                    Log(log, $"ERROR: {ex.Message}", System.Drawing.Color.Red);
+                    _userService.SQL_Upload(_pcbSno, _customer, true, ex.Message.ToString(), stages);
+                }
+                finally
+                {
+                    btn.Enabled = true;
+                }
         }
         //static string Safe(string s)
         //{
@@ -1114,6 +1169,9 @@ cf.ByControlType(ControlType.Window)
                             Log(log, "BurnInTest Preferences window Focus.",Color.Lime);
 
                             Thread.Sleep(500);
+                            //Testing
+
+                           
 
                             var checkbox = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1224"))?.AsCheckBox();
 
@@ -1294,23 +1352,102 @@ cf.ByControlType(ControlType.Window)
 
                             }
 
+                            //var okButton = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1"))?.AsButton();
 
+                            //if (okButton != null)
+                            //{
+                            //    okButton.Invoke();
+                            //    Log(log, "Clicked OK button.");
+                            //}
+                            //else
+                            //{
+                            //    Log(log, "OK button not found (check AutomationId).");
+                            //    payhistory.burnintest = "Fail";
+                            //}
 
+                            var tabControl = prefWindow.FindFirstDescendant(cf =>
+   cf.ByControlType(ControlType.Tab))?.AsTab();
 
-
-                            var okButton = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1"))?.AsButton();
-
-                            if (okButton != null)
+                            var loggingTab = tabControl?.TabItems
+    .FirstOrDefault(t => t.Name == "Logging");
+                          
+                            if (loggingTab == null)
                             {
-                                okButton.Invoke();
-                                Log(log, "Clicked OK button.");
-                            }
-                            else
-                            {
-                                Log(log, "OK button not found (check AutomationId).");
+                                Log(log, "BurnInTest Preferences Logging Tab window not found.", Color.Red);
                                 payhistory.burnintest = "Fail";
+                                _userService.SQL_Upload(_pcbSno, _customer, true, "BurnInTest Preferences Logging Tab window not found.", stages);
+                                return;
+                            }
+                            loggingTab.Select();
+                            Thread.Sleep(1500);
+                            var allElements = prefWindow.FindAllDescendants();
+                            var chkTurn= prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1058"))?.AsCheckBox();
+                            if (chkTurn == null)
+                            {
+                                Log(log, "Turn on logging CheckBox not found.", Color.Red);
+                                payhistory.burnintest = "Fail";
+                                _userService.SQL_Upload(_pcbSno, _customer, true, "Turn on logging CheckBox not found.", stages);
+                                return;
+                            }
+                            if(!chkTurn.IsChecked.HasValue || !chkTurn.IsChecked.Value)
+                                chkTurn.IsChecked = true;
+
+                            var txtpathname = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1066"))?.AsTextBox();
+                            if (txtpathname == null)
+                            {
+                                Log(log, "Logging Tab Path Text Box not found.", Color.Red);
+                                payhistory.burnintest = "Fail";
+                                _userService.SQL_Upload(_pcbSno, _customer, true, "Logging Tab Path Text Box not found.", stages);
+                                return;
+                            }
+                           
+                            string logpath = @"C:/project/passmark/BurnInResultLog.log";
+                            var pathname = txtpathname.Patterns.Value.Pattern;
+                            if (pathname != null)
+                            {
+                                if (pathname.ToString() != logpath)
+                                {
+                                    pathname.SetValue(logpath);
+                                    Log(log, "Logging Tab Path Text Box value set.", Color.Green);
+                                }
+                                else
+                                {
+                                    Log(log, "Logging Tab Path Text Box value already set.", Color.Green);
+                                }
                             }
 
+                            var singleLogCheck = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1064"))?.AsRadioButton();
+                            if (singleLogCheck == null)
+                            {
+                                Log(log, "Single Log Check not found.", Color.Red);
+                                payhistory.burnintest = "Fail";
+                                _userService.SQL_Upload(_pcbSno, _customer, true, "Single Log Check not found.", stages);
+                                return;
+                            }
+                            singleLogCheck.Click();
+
+                            var okButton2 = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1"))?.AsButton();
+                            if (okButton2 == null)
+                            {
+                                Log(log, "Logging ok button not found.", Color.Red);
+                                payhistory.burnintest = "Fail";
+                                _userService.SQL_Upload(_pcbSno, _customer, true, "Logging ok button not found.", stages);
+                                return;
+                            }
+                            okButton2.Invoke();
+
+                          
+                            var warningWindow = mainWindow.FindFirstDescendant(cf =>
+    cf.ByControlType(ControlType.Window).And(cf.ByName("Warning")))
+    ?.AsWindow();
+                            if (warningWindow != null)
+                            {
+                                var okBtn = warningWindow.FindFirstDescendant(cf =>
+                                    cf.ByControlType(ControlType.Button).And(cf.ByName("Yes")))
+                                    ?.AsButton();
+
+                                okBtn?.Invoke(); // or .Click()
+                            }
                             configMenu?.Click();
 
                             Log(log, "Configuration menu Clicked", System.Drawing.Color.Green);
@@ -1471,7 +1608,7 @@ cf.ByControlType(ControlType.Window)
 
 
                             Log(log, "Task Running", Color.Lime);
-                            int sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["Sleep"].ToString());
+                           // sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["Sleep"].ToString());
                             //if (sleepingTime == null)
                             //    sleepingTime = 210000;
                             Log(log,sleepingTime.ToString(),Color.Lime);
@@ -2068,12 +2205,12 @@ cf.ByControlType(ControlType.Window)
 
                             this.Invoke((MethodInvoker)delegate
                             {
-                                frmblink = new Blink();
-                                frmblink.TopMost = true;
-                                frmblink.Show();
+                                frmFailLink = new FailBlink();
+                                frmFailLink.TopMost = true;
+                                frmFailLink.Show();
 
-                                frmblink.AddText("Error:", Color.Red, true);
-                                frmblink.AddText(ex.Message.ToString(), Color.Green);
+                                frmFailLink.AddText("Error:", Color.Red, true);
+                                frmFailLink.AddText(ex.Message.ToString(), Color.Green);
                             });
                             break;
                         }
@@ -2328,9 +2465,10 @@ cf.ByControlType(ControlType.Window)
         }
        
 
-        public async Task<Dictionary<bool,int>> getSerialNo(string HW_PATH , System.Windows.Forms.RichTextBox log)
+        public async Task<services> getSerialNo(string HW_PATH , System.Windows.Forms.RichTextBox log)
         {
             Dictionary<bool, int> checkSN = new Dictionary<bool, int>();
+          
             try
             {
                 string[] invalues = new string[7];
@@ -2339,26 +2477,39 @@ cf.ByControlType(ControlType.Window)
                 proc.FileName = Path.Combine(HW_PATH, "HWiNFO64.exe");
                 proc.WorkingDirectory = HW_PATH;
                 proc.Verb = "runas";
-                Process.Start(proc);
+               var process = Process.Start(proc);
                 this.SendToBack();
-                Thread.Sleep(5000);
+                //Thread.Sleep(5000);
+                await Task.Delay(5000);
+               
 
                 // --- Ensure HWiNFO is running ---
                 Process[] hwinfoApps = Process.GetProcessesByName("HWiNFO64");
-
+                if (process == null || process.HasExited)
+                {
+                    Log(log, "HWiNFO failed to start", Color.Red);
+                    checkSN[false] = 0;
+                    _servies.resultset = checkSN;
+                    return _servies;
+                }
                 if (hwinfoApps.Length == 0)
                 {
                     Log(log,"Unable to Open HWiNFO... Contact Test Dev Team" + "HWiNFO Not Opening",Color.Red);
                     //Application.Exit();
-                    checkSN.Add(false, 0);
-                    return checkSN;
+
+                    //checkSN.Add(false, 0);
+                    checkSN[false] = 0;
+                    _servies.resultset = checkSN;
+                    return _servies;
                 }
 
                 // --- Retrieve main window AutomationElement ---
                 //AutomationElement hwWindow = AutomationElement.FromHandle(hwinfoApps[0].MainWindowHandle);
                 using (var automation = new UIA3Automation())
                 {
-                    Thread.Sleep(1500);
+                   // Thread.Sleep(1500);
+                   await Task.Delay(1500);
+
                     var hwWindow = automation.FromHandle(
                         hwinfoApps[0].MainWindowHandle
                     ).AsWindow();
@@ -2368,14 +2519,16 @@ cf.ByControlType(ControlType.Window)
                     {
                         Log(log,"Automation Element is Not Working"+ "UI Element Error", Color.Red);
                         // Application.Exit();
-                        checkSN.Add(false, 0);
-                        return checkSN ;
+                        //checkSN.Add(false, 0);
+                        checkSN[false] = 0;
+                        _servies.resultset = checkSN;
+                        return _servies;
                     }
 
                     // --- Click "Save Report" Button ---
                    await ClickButtonByName(hwWindow, "Save Report" , log);
 
-                    Thread.Sleep(1000);
+                    await Task.Delay(1000);
 
 
                     // --- Kill HWiNFO processes ---
@@ -2435,7 +2588,7 @@ cf.ByControlType(ControlType.Window)
                                 if (!csv.Read())
                                     break;
 
-                                lines.Add(csv.Parser.Record);
+                                lines.Add(csv.Parser.Record.ToArray());
                             }
                             catch (Exception ex)
                             {
@@ -2452,7 +2605,8 @@ cf.ByControlType(ControlType.Window)
 
                         if (rows.Length == 2)
                         {
-                            if (rows[0] == "Drive Serial Number:")
+                            // if (rows[0] == "Drive Serial Number:")
+                            if (rows[0].Trim().Equals("Drive Serial Number:", StringComparison.OrdinalIgnoreCase))
                             {
                                 // string rpt_SN = rows[1];
 
@@ -2469,9 +2623,17 @@ cf.ByControlType(ControlType.Window)
                                         Thread.Sleep(1000);
                                         _fgDetails =await _userService.GetFgDetails(_productTypeId, serialno);
                                     }
-
+                                   
                                     if (_fgDetails != null)
                                     {
+                                        if(_fgDetails.error != "false")
+                                        {
+                                            Log(log, "Error fetching Network Related Issue: " + _fgDetails.error, Color.Red);
+                                            checkSN[false] = 0;
+                                            SafeUI(() => txtCustomer.Clear());
+                                            SafeUI(() => txtCustomer.Focus());
+                                            return _servies;
+                                        }
                                         // _customer = _fgDetails.Customer;
                                         _customer = serialno;
                                         _pcbSno = _fgDetails.ProductType;
@@ -2490,7 +2652,7 @@ cf.ByControlType(ControlType.Window)
 
                                         }
 
-                                        checkSN = await _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
+                                        _servies = await _userService.Check_Curr_Stage(_pcbSno, "262", "Performance Test", true);
 
                                         Log(log, "FG Name :" + _fgName + " -PCBAID " + _pcbSno, Color.Lime);
                                     }
@@ -2498,13 +2660,14 @@ cf.ByControlType(ControlType.Window)
                                     {
                                         //Log(log, "Serial No not found in Data Base", Color.Red);
                                         //checkSN.Add(false, 0);
-                                        Log(log, "Serial No not found in DB", Color.Red);
-                                        checkSN.Add(false, 0);
+                                        Log(log, "Data Base Not connected / Serial Number Not Found , Contact Admin" , Color.Lime);
+                                        //Log(log,"Serial No not found in DB", Color.Red);
+                                        checkSN[false] = 0;
                                         SafeUI(() => txtCustomer.Clear());
                                         SafeUI(() => txtCustomer.Focus());
 
                                     }
-                                    return checkSN;
+                                    return _servies;
                                 }
                                  
                                   
@@ -2521,10 +2684,11 @@ cf.ByControlType(ControlType.Window)
             catch (Exception ex)
             {
                 System.Windows.Forms.MessageBox.Show(ex.ToString());
+                _servies.resultset = checkSN;
                 checkSN.Add(false, 0);
-                return checkSN;
+                return _servies;
             }
-            return checkSN;
+            return _servies;
 
         }
 
@@ -2739,5 +2903,8 @@ cf.ByControlType(ControlType.Window)
             return "UNKNOWN";
         }
 
+
     }
+
+  
 }
