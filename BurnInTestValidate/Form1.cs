@@ -85,6 +85,8 @@ namespace BurnInTestValidate
         public int stageid = 0;
         public string stageName = string.Empty;
         public int sleepingTime = 0;
+        public string M2_Serialno= string.Empty;
+        string logFile = string.Empty;
         //public FrmBurnIntest(IUserService userService,UserSession userSession, string customer,
         //string productTypeName, int productTypeId,
         //string fgName, FgDetails fgDetails)
@@ -250,7 +252,7 @@ namespace BurnInTestValidate
             layout.Controls.Add(txtCustomer, 1, 0);
 
             layout.Controls.Add(lblProduct, 0, 1);
-            layout.Controls.Add(cmbCustomer, 1, 1);
+           // layout.Controls.Add(cmbCustomer, 1, 1);
 
             layout.Controls.Add(lblFG, 0, 2);
            
@@ -435,30 +437,30 @@ namespace BurnInTestValidate
             btn.Enabled = false;
             var log = (System.Windows.Forms.RichTextBox)this.Tag;
             HwExeKilled(log);
-            if(cmbCustomer.SelectedIndex == 0)
-            {
-                Log(log, "Please select a product size from the dropdown.", Color.Red);
-                System.Windows.Forms.MessageBox.Show("Please select a product size from the dropdown.", "Input Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                cmbCustomer.Focus();
-                btnStart.Enabled= true;
-                return;
-            }
-            else
-            {
-                if(cmbCustomer.SelectedItem.ToString() == "1TB")
-                {
-                   sleepingTime= Convert.ToInt32(ConfigurationManager.AppSettings["Sleep"].ToString());
-                }
-                else if(cmbCustomer.SelectedItem.ToString() == "500GB")
-                {
-                    sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["Sleep500"].ToString());
-                }
-                else if (cmbCustomer.SelectedItem.ToString() == "250GB")
-                {
-                    sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["Sleep250"].ToString());
-                }
-                btnStart.Enabled = false;
-            }
+            //if(cmbCustomer.SelectedIndex == 0)
+            //{
+            //    Log(log, "Please select a product size from the dropdown.", Color.Red);
+            //    System.Windows.Forms.MessageBox.Show("Please select a product size from the dropdown.", "Input Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            //    cmbCustomer.Focus();
+            //    btnStart.Enabled= true;
+            //    return;
+            //}
+            //else
+            //{
+            //    if(cmbCustomer.SelectedItem.ToString() == "1TB")
+            //    {
+            //       sleepingTime= Convert.ToInt32(ConfigurationManager.AppSettings["Sleep"].ToString());
+            //    }
+            //    else if(cmbCustomer.SelectedItem.ToString() == "500GB")
+            //    {
+            //        sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["Sleep500"].ToString());
+            //    }
+            //    else if (cmbCustomer.SelectedItem.ToString() == "250GB")
+            //    {
+            //        sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["Sleep250"].ToString());
+            //    }
+            //    btnStart.Enabled = false;
+            //}
             string elogFilePath = ConfigurationManager.AppSettings["BurnInPath"].ToString();
             string efilename = "BurnInResultLog";
             string efullPath = Path.Combine(elogFilePath, efilename + ".log");
@@ -470,7 +472,7 @@ namespace BurnInTestValidate
             string serialFilePath = ConfigurationManager.AppSettings["HWPath"].ToString();
             // string serialFilePath = @"C:\project\hwi_822\hwi_822";
              var chkserialNo = await getSerialNo(serialFilePath, log);
-
+              M2_Serialno = txtCustomer.Text.ToString();
             //Dictionary<bool, int> checkSNnew = new Dictionary<bool, int>();
             //checkSNnew.Add(true, 0);
             //_servies.resultset = checkSNnew;
@@ -506,7 +508,7 @@ namespace BurnInTestValidate
 
                 if (chkserialNo.resultset.ContainsKey(false))
                 {
-                    writeErrorMessage("Expexted StageName, Stage ID" + "-" + chkserialNo.StageName + "," + chkserialNo.stageid + " but CurrentStage Name , Current Stage id " + chkserialNo.CurrentStageName + "," + chkserialNo.CurrentStageid + "-Stage MissMatch/Serial No Not Found", serialFilePath);
+                    writeErrorMessage("Satge MisMatch ID" + "-" + chkserialNo.StageName + "," + chkserialNo.stageid + " but CurrentStage Name , Current Stage id " + chkserialNo.CurrentStageName + "," + chkserialNo.CurrentStageid + "-Stage MissMatch/Serial No Not Found", serialFilePath);
                     Log(log, "Expexted StageName, Stage ID" + "-" + chkserialNo.StageName + "," + chkserialNo.stageid + " but CurrentStage Name , Current Stage id - " + chkserialNo.CurrentStageName + "," + chkserialNo.CurrentStageid + "-Stage MissMatch/Serial No Not Found", Color.Red);
 
                     _userService.SQL_Upload(_pcbSno, _customer, true, "Stage MissMatch/Serial No Not Found", stages);
@@ -825,7 +827,7 @@ cf.ByControlType(ControlType.Window)
                     payhistory.CrystalReport = "Pass";
 
 
-
+                   
                     //Testing
                     //Application appnew = null;
 
@@ -934,7 +936,7 @@ cf.ByControlType(ControlType.Window)
                     // Thread.Sleep(100000); Testing
                     //check crystal result strat
 
-                    Thread.Sleep(500);
+                   // Thread.Sleep(500);
 
                     //check crystal result End
 
@@ -1084,1018 +1086,832 @@ cf.ByControlType(ControlType.Window)
 
                     //return; //Testing
 
-
-
-
                     //==============================
                     writeErrorMessage("Burn In Test Run Started", "Message");
                     Log(log, "Burn In Test Run Started", Color.Lime);
-                    app = LaunchWithAdmin(exePath);
+
+
+                    //   app = LaunchWithAdmin(exePath);
                     // Log(log, "Burn In Test Run Exe Launched");
-                    Thread.Sleep(7000);
+                    // Thread.Sleep(7000);
 
-                    var mainWindow = desktop.FindFirstDescendant(cf =>
-             cf.ByControlType(ControlType.Window)
-               .And(cf.ByName("BurnInTest V8.1 Pro (1006)")))
-             ?.AsWindow();
+                    //New Code Testing
+                    string burnInTestDirectory = exePath;
+                    //string burnInTestExe = "bit.exe";
+                    string tempScriptPath = "";
+                    string prefix = "";
+                    
+                    string scriptTemplatePath = "";
+                    string Read_filelog_Pattrn = "";
+                    string board_stat = "";
+                   // string filename = "";
 
-                    Thread.Sleep(2000);
-                    if (mainWindow == null)
+                    //if (M2_Test)
+                    //{
+                   // Read_filelog_Pattrn = "1";
+                        // if (ddr_curr_stagecheck)
+                        //{
+                        scriptTemplatePath = @"C:\BurninTest_CONFIG_FILE\M2_AutoTest.bits";   // template .bits
+                        tempScriptPath = @"C:\BurninTest_CONFIG_FILE\M2_AutoTest_Run.bits";    // generated .bits
+                        prefix = $"{M2_Serialno}_{DateTime.Now:yyyyMMdd_HHmm}";
+                        logFile = $@"C:\BurninTest_CONFIG_FILE\Test_Logs\{M2_Serialno}_{DateTime.Now:yyyyMMdd_HHmm}_bitTest.log";
+                       // filename = logFile;
+                        //}
+                        //else
+                        //{
+                        //    MessageBox.Show("Current stage check failed for DRAM. Please ensure the PCB is at the correct stage before testing.", "Stage Check Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        //    return;
+
+                        //}
+
+                   // }
+                    //else if (SATA_SSDTest)
+                    //{
+                    //    Read_filelog_Pattrn = "2";
+                    //    //if (ssd_curr_stagecheck)
+                    //    //{
+                    //    scriptTemplatePath = @"C:\BurninTest_CONFIG_FILE\SATA_AutoTest.bits";   // template .bits
+                    //    tempScriptPath = @"C:\BurninTest_CONFIG_FILE\SATA_AutoTest_Run.bits";    // generated .bits
+                    //    // Prefix includes serial number and timestamp
+                    //    prefix = $"{SATA_Serialno}_{DateTime.Now:yyyyMMdd_HHmm}";
+                    //    logFile = $@"C:\BurninTest_CONFIG_FILE\Test_Logs\{SATA_Serialno}_{DateTime.Now:yyyyMMdd_HHmm}_bitTest.log";
+                    //    filename = logFile;
+
+                    //    // }
+                    //    //else
+                    //    //{
+                    //    //    MessageBox.Show("Current stage check failed for SSD. Please ensure the PCB is at the correct stage before testing.", "Stage Check Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    //    //    return;
+                    //    //}
+                    //}
+
+                    //else
+                    //{
+                    //    Log(log, "Test type not selected. Please select M.2, SATA or Both.", Color.Red);
+                    //    return;
+                    //}
+
+
+                    
+                    try
                     {
-                        Log(log, "Main window not found", System.Drawing.Color.Red);
-                        writeErrorMessage("Main window not found", "Error");
-                        payhistory.burnintest = "Fail";
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "Main window not found", stages);
-                        return;
-                    }
+                        // Read and inject the prefix placeholder
+                        string scriptContent = File.ReadAllText(scriptTemplatePath);
+                        scriptContent = scriptContent.Replace("{{PREFIX}}", prefix);
+                        File.WriteAllText(tempScriptPath, scriptContent);
 
-                    mainWindow.Focus();
+                       // string burnInTestPath = Path.Combine(burnInTestDirectory, burnInTestExe);
+                        string arguments = $"-s \"{tempScriptPath}\"";
 
-                    Thread.Sleep(1000);
-
-                    var menuBar = mainWindow.FindFirstDescendant(cf => cf.ByControlType(ControlType.MenuBar))?.AsMenu();
-                    if (menuBar == null)
-                    {
-                        Log(log, "Menu bar not found", System.Drawing.Color.Red);
-                        payhistory.burnintest = "Fail";
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "Menu bar not found", stages);
-                        return;
-                    }
-                    System.Threading.Thread.Sleep(1500);
-                    var configMenu = mainWindow.FindFirstDescendant(cf => cf.ByName("Configuration"))?.AsMenuItem();
-                    if (configMenu == null)
-                    {
-                        Log(log, "Configuration menu not found", System.Drawing.Color.Red);
-                        payhistory.burnintest = "Fail";
-                        _userService.SQL_Upload(_pcbSno, _customer, true, "Configuration menu not found", stages);
-                        return;
-                    }
-                    configMenu?.Click();
-                    Log(log, "Configuration menu Clicked", System.Drawing.Color.Green);
-
-                    System.Threading.Thread.Sleep(1000);
-                    var allWindowsnew = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
-
-                    foreach (var w in allWindowsnew)
-                    {
-                        try
+                        ProcessStartInfo psi = new ProcessStartInfo
                         {
-                            System.Threading.Thread.Sleep(2500);
+                            FileName = burnInTestDirectory,
+                            Arguments = arguments,
+                           // WorkingDirectory = burnInTestDirectory,
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true
+                        };
 
-                            var testPref = w.FindFirstDescendant(cf => cf.ByName("Test Preferences..."));
+                        // --- Status: running test ---
+                        Process burnInProcess = null;
+                        CancellationTokenSource cts = new CancellationTokenSource();
 
-                            if (testPref != null)
-                            {
-                                testPref.Click();
-
-                                Log(log, "Test Preferences found-", System.Drawing.Color.Green);
-
-                            }
-                            System.Threading.Thread.Sleep(4000);
-
-
-
-                            var prefWindow = mainWindow.FindFirstDescendant(cf => cf.ByName("BurnInTest Preferences"))?.AsWindow()
-                             ?? mainWindow.FindFirstDescendant(cf => cf.ByControlType(ControlType.Window).And(cf.ByName("Preferences")))?.AsWindow();
-
-                            if (prefWindow == null)
-                            {
-                                Log(log, "BurnInTest Preferences window not found.", Color.Red);
-                                payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "BurnInTest Preferences window not found.", stages);
-                                return;
-                            }
-                            prefWindow.Focus();
-                            Log(log, "BurnInTest Preferences window Focus.",Color.Lime);
-
-                            Thread.Sleep(500);
-                            //Testing
-
-                           
-
-                            var checkbox = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1224"))?.AsCheckBox();
-
-                            if (checkbox == null)
-                            {
-                                Log(log, "Checkbox not found (check AutomationId-)" + checkbox.AutomationId + "-" + checkbox.Name, Color.Red);
-                                payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "Checkbox not found (check AutomationId-).", stages);
-                                return;
-                            }
-                            checkbox.IsChecked = true;
-                            Thread.Sleep(500);
-                            checkbox.IsChecked = false;
-
-
-                            for (int i = 0; i < 10; i++)
-                            {
-                                var lstC = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("ListViewItem-" + i))?.AsListBoxItem();
-                                if (lstC == null)
+                        Task burnInTask = Task.Run(() =>
+                        {
+                             burnInProcess = Process.Start(psi);
+                            
+                                while (!burnInProcess.HasExited)
                                 {
-                                    Log(log, "List Item Not Fount-" + i.ToString(), Color.Red);
-                                    payhistory.burnintest = "Fail";
-                                    break;
+                                    while (!burnInProcess.HasExited)
+                                    {
+                                        Thread.Sleep(1000);
+                                    }
+
+                                    Log(log, "Burn-in Completed", Color.Green);
                                 }
-                                string lstName = lstC.Name.ToString();
-                                string checkCDrive = lstName.Substring(0, 2);
-                                if (checkCDrive == "C:")
-                                {
-                                    lstC.Select();
+                            
+                        });
 
-                                    var checkC = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1223"))?.AsCheckBox();
-
-                                    if (checkC == null)
-                                    {
-                                        Log(log, "ListView C: not found .", Color.Red);
-                                        payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "ListView C: not found .", stages);
-                                        return;
-                                    }
-                                    Log(log, "ListView C: found");
-                                    checkC.IsChecked = false;
-
-
-                                    // break;
-                                }
-                                if (checkCDrive == "D:")
-                                {
-                                    lstC.Select();
-                                    System.Threading.Thread.Sleep(500);
-                                    var checkD = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1223"))?.AsCheckBox();
-
-                                    if (checkD == null)
-                                    {
-                                        Log(log, "ListView D: not found .", Color.Red);
-                                        payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "ListView D: not found .", stages);
-                                        return;
-                                    }
-                                    Log(log, "ListView D: found", Color.Red);
-                                    checkD.IsChecked = true;
-                                    var fileSizeD = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1011"))?.AsTextBox();
-                                    if (fileSizeD == null)
-                                    {
-                                        Log(log, "File Size Box Not Found", System.Drawing.Color.Red);
-                                        payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "File Size Box Not Found", stages);
-                                        return;
-                                    }
-                                    System.Threading.Thread.Sleep(500);
-                                    var filesized = fileSizeD.Patterns.Value.Pattern;
-                                    if (filesized.ToString() != "3.00")
-                                    {
-                                        System.Threading.Thread.Sleep(500);
-                                        filesized.SetValue("3.00");
-                                        Log(log, "D: File Size Box value set", System.Drawing.Color.Green);
-                                    }
-
-
-
-                                    var comboElement_D = prefWindow.FindFirstDescendant(cf =>
-                        cf.ByAutomationId("1148")
-                          .And(cf.ByControlType(ControlType.ComboBox)));
-                                    if (comboElement_D == null)
-                                    {
-                                        Log(log, "D: Block Size Box Not Found", System.Drawing.Color.Red);
-                                        payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "D: Block Size Box Not Found", stages);
-                                        return;
-                                    }
-                                    var combod = comboElement_D.AsComboBox();
-                                    combod.Focus();
-                                    System.Threading.Thread.Sleep(200);
-
-                                    Keyboard.Type("2");
-                                    System.Threading.Thread.Sleep(250);
-
-                                    Keyboard.Type("{ENTER}");
-
-                                    if (combod.Value.ToString() != "256")
-                                    {
-                                        Log(log, "D:Block Size value 256 Not selectd" + combod.Value.ToString(), Color.Red);
-                                        payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "D:Block Size value 256 Not selectd", stages);
-                                        return;
-                                    }
-                                    Log(log, " D: Block Size value Selected" + combod.Value.ToString(), Color.Lime);
-                                    //break;
-                                }
-                                if (checkCDrive == "E:")
-                                {
-                                    lstC.Select();
-                                    System.Threading.Thread.Sleep(500);
-                                    var checkE = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1223"))?.AsCheckBox();
-
-                                    if (checkE == null)
-                                    {
-                                        Log(log, "ListView E: not found .", Color.Red);
-                                        payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "ListView E: not found .", stages);
-                                        return;
-                                    }
-                                    Log(log, "ListView E: found", Color.Lime);
-                                    checkE.IsChecked = true;
-                                    var fileSizeE = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1011"))?.AsTextBox();
-                                    System.Threading.Thread.Sleep(500);
-                                    if (fileSizeE == null)
-                                    {
-                                        Log(log, "E:File Size Box Not Found", System.Drawing.Color.Red);
-                                        payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "E:File Size Box Not Found", stages);
-                                        return;
-                                    }
-
-                                    var filesizee = fileSizeE.Patterns.Value.Pattern;
-
-                                    if (filesizee.ToString() != "3.00")
-                                    {
-                                        System.Threading.Thread.Sleep(500);
-                                        filesizee.SetValue("3.00");
-                                        Log(log, "E: File Size Box value set", System.Drawing.Color.Green);
-                                    }
-
-
-                                    var comboElement_E = prefWindow.FindFirstDescendant(cf =>
-                          cf.ByAutomationId("1148")
-                            .And(cf.ByControlType(ControlType.ComboBox)));
-                                    if (comboElement_E == null)
-                                    {
-                                        Log(log, "E: Block Size Box Not Found", System.Drawing.Color.Red);
-                                        payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "E: Block Size Box Not Found", stages);
-                                        return;
-                                    }
-
-
-                                    var comboe = comboElement_E.AsComboBox();
-                                    comboe.Focus();
-                                    System.Threading.Thread.Sleep(200);
-
-                                    Keyboard.Type("2");
-                                    System.Threading.Thread.Sleep(250);
-
-                                    Keyboard.Type("{ENTER}");
-
-                                    if (comboe.Value.ToString() != "256")
-                                    {
-                                        Log(log, "E Block Size value 256 Not selectd" + comboe.Value.ToString(), Color.Lime);
-                                        payhistory.burnintest = "Fail";
-                                        _userService.SQL_Upload(_pcbSno, _customer, true, "E Block Size value 256 Not selectd", stages);
-                                        return;
-                                    }
-                                    Log(log, " E: Block Size value Selected" + comboe.Value.ToString());
-
-                                    writeErrorMessage("Burn In Test 1st Stage Completed", "Message");
-
-                                    break;
-                                }
-
-                            }
-
-                            //var okButton = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1"))?.AsButton();
-
-                            //if (okButton != null)
-                            //{
-                            //    okButton.Invoke();
-                            //    Log(log, "Clicked OK button.");
-                            //}
-                            //else
-                            //{
-                            //    Log(log, "OK button not found (check AutomationId).");
-                            //    payhistory.burnintest = "Fail";
-                            //}
-
-                            var tabControl = prefWindow.FindFirstDescendant(cf =>
-   cf.ByControlType(ControlType.Tab))?.AsTab();
-
-                            var loggingTab = tabControl?.TabItems
-    .FirstOrDefault(t => t.Name == "Logging");
+                      Task moniterTask= Task.Run(() =>
+                        {
                           
-                            if (loggingTab == null)
-                            {
-                                Log(log, "BurnInTest Preferences Logging Tab window not found.", Color.Red);
-                                payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "BurnInTest Preferences Logging Tab window not found.", stages);
-                                return;
-                            }
-                            loggingTab.Select();
-                            Thread.Sleep(1500);
-                            var allElements = prefWindow.FindAllDescendants();
-                            var chkTurn= prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1058"))?.AsCheckBox();
-                            if (chkTurn == null)
-                            {
-                                Log(log, "Turn on logging CheckBox not found.", Color.Red);
-                                payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "Turn on logging CheckBox not found.", stages);
-                                return;
-                            }
-                            if(!chkTurn.IsChecked.HasValue || !chkTurn.IsChecked.Value)
-                                chkTurn.IsChecked = true;
-
-                            var txtpathname = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1066"))?.AsTextBox();
-                            if (txtpathname == null)
-                            {
-                                Log(log, "Logging Tab Path Text Box not found.", Color.Red);
-                                payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "Logging Tab Path Text Box not found.", stages);
-                                return;
-                            }
-                           
-                            string logpath = @"C:/project/passmark/BurnInResultLog.log";
-                            var pathname = txtpathname.Patterns.Value.Pattern;
-                            if (pathname != null)
-                            {
-                                if (pathname.ToString() != logpath)
+                                while (!cts.Token.IsCancellationRequested)
                                 {
-                                    pathname.SetValue(logpath);
-                                    Log(log, "Logging Tab Path Text Box value set.", Color.Green);
-                                }
-                                else
+
+
+                                    //await Task.Run(() =>
+                                    //{
+                                    //    using (Process process = Process.Start(psi))
+                                    //    {
+                                    //        string output = process.StandardOutput.ReadToEnd();
+                                    //        string errorOutput = process.StandardError.ReadToEnd();
+                                    //        process.WaitForExit();
+                                    //        int exitCode = process.ExitCode;
+
+                                    //    }
+                                    //});
+
+                                    //End Testing
+
+                         //           var mainWindow = desktop.FindFirstDescendant(cf =>
+                         //cf.ByControlType(ControlType.Window)
+                         //  .And(cf.ByName("BurnInTest V8.1 Pro (1006)")))
+                         //?.AsWindow();
+
+                                    //       Thread.Sleep(2000);
+                                    //       if (mainWindow == null)
+                                    //       {
+                                    //           Log(log, "Main window not found", System.Drawing.Color.Red);
+                                    //           writeErrorMessage("Main window not found", "Error");
+                                    //           payhistory.burnintest = "Fail";
+                                    //           _userService.SQL_Upload(_pcbSno, _customer, true, "Main window not found", stages);
+                                    //           return;
+                                    //       }
+
+                                    //       mainWindow.Focus();
+
+                                    //       Thread.Sleep(1000);
+
+                                    //       var menuBar = mainWindow.FindFirstDescendant(cf => cf.ByControlType(ControlType.MenuBar))?.AsMenu();
+                                    //       if (menuBar == null)
+                                    //       {
+                                    //           Log(log, "Menu bar not found", System.Drawing.Color.Red);
+                                    //           payhistory.burnintest = "Fail";
+                                    //           _userService.SQL_Upload(_pcbSno, _customer, true, "Menu bar not found", stages);
+                                    //           return;
+                                    //       }
+                                    //       System.Threading.Thread.Sleep(1500);
+                                    //       var configMenu = mainWindow.FindFirstDescendant(cf => cf.ByName("Configuration"))?.AsMenuItem();
+                                    //       if (configMenu == null)
+                                    //       {
+                                    //           Log(log, "Configuration menu not found", System.Drawing.Color.Red);
+                                    //           payhistory.burnintest = "Fail";
+                                    //           _userService.SQL_Upload(_pcbSno, _customer, true, "Configuration menu not found", stages);
+                                    //           return;
+                                    //       }
+                                    //       configMenu?.Click();
+                                    //       Log(log, "Configuration menu Clicked", System.Drawing.Color.Green);
+
+                                    //       System.Threading.Thread.Sleep(1000);
+                                    //       var allWindowsnew = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
+
+                                    //       foreach (var w in allWindowsnew)
+                                    //       {
+                                    //           try
+                                    //           {
+                                    //               System.Threading.Thread.Sleep(2500);
+
+                                    //               var testPref = w.FindFirstDescendant(cf => cf.ByName("Test Preferences..."));
+
+                                    //               if (testPref != null)
+                                    //               {
+                                    //                   testPref.Click();
+
+                                    //                   Log(log, "Test Preferences found-", System.Drawing.Color.Green);
+
+                                    //               }
+                                    //               System.Threading.Thread.Sleep(4000);
+
+
+
+                                    //               var prefWindow = mainWindow.FindFirstDescendant(cf => cf.ByName("BurnInTest Preferences"))?.AsWindow()
+                                    //                ?? mainWindow.FindFirstDescendant(cf => cf.ByControlType(ControlType.Window).And(cf.ByName("Preferences")))?.AsWindow();
+
+                                    //               if (prefWindow == null)
+                                    //               {
+                                    //                   Log(log, "BurnInTest Preferences window not found.", Color.Red);
+                                    //                   payhistory.burnintest = "Fail";
+                                    //                   _userService.SQL_Upload(_pcbSno, _customer, true, "BurnInTest Preferences window not found.", stages);
+                                    //                   return;
+                                    //               }
+                                    //               prefWindow.Focus();
+                                    //               Log(log, "BurnInTest Preferences window Focus.",Color.Lime);
+
+                                    //               Thread.Sleep(500);
+                                    //               //Testing
+
+
+
+                                    //               var checkbox = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1224"))?.AsCheckBox();
+
+                                    //               if (checkbox == null)
+                                    //               {
+                                    //                   Log(log, "Checkbox not found (check AutomationId-)" + checkbox.AutomationId + "-" + checkbox.Name, Color.Red);
+                                    //                   payhistory.burnintest = "Fail";
+                                    //                   _userService.SQL_Upload(_pcbSno, _customer, true, "Checkbox not found (check AutomationId-).", stages);
+                                    //                   return;
+                                    //               }
+                                    //               checkbox.IsChecked = true;
+                                    //               Thread.Sleep(500);
+                                    //               checkbox.IsChecked = false;
+
+
+                                    //    for (int i = 0; i < 10; i++)
+                                    //    {
+                                    //        var lstC = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("ListViewItem-" + i))?.AsListBoxItem();
+                                    //        if (lstC == null)
+                                    //        {
+                                    //            Log(log, "List Item Not Fount-" + i.ToString(), Color.Red);
+                                    //            payhistory.burnintest = "Fail";
+                                    //            break;
+                                    //        }
+                                    //        string lstName = lstC.Name.ToString();
+                                    //        string checkCDrive = lstName.Substring(0, 2);
+                                    //        if (checkCDrive == "C:")
+                                    //        {
+                                    //            lstC.Select();
+
+                                    //            var checkC = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1223"))?.AsCheckBox();
+
+                                    //            if (checkC == null)
+                                    //            {
+                                    //                Log(log, "ListView C: not found .", Color.Red);
+                                    //                payhistory.burnintest = "Fail";
+                                    //                _userService.SQL_Upload(_pcbSno, _customer, true, "ListView C: not found .", stages);
+                                    //                return;
+                                    //            }
+                                    //            Log(log, "ListView C: found");
+                                    //            checkC.IsChecked = false;
+
+
+                                    //            // break;
+                                    //        }
+                                    //        if (checkCDrive == "D:")
+                                    //        {
+                                    //            lstC.Select();
+                                    //            System.Threading.Thread.Sleep(500);
+                                    //            var checkD = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1223"))?.AsCheckBox();
+
+                                    //            if (checkD == null)
+                                    //            {
+                                    //                Log(log, "ListView D: not found .", Color.Red);
+                                    //                payhistory.burnintest = "Fail";
+                                    //                _userService.SQL_Upload(_pcbSno, _customer, true, "ListView D: not found .", stages);
+                                    //                return;
+                                    //            }
+                                    //            Log(log, "ListView D: found", Color.Red);
+                                    //            checkD.IsChecked = true;
+                                    //            var fileSizeD = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1011"))?.AsTextBox();
+                                    //            if (fileSizeD == null)
+                                    //            {
+                                    //                Log(log, "File Size Box Not Found", System.Drawing.Color.Red);
+                                    //                payhistory.burnintest = "Fail";
+                                    //                _userService.SQL_Upload(_pcbSno, _customer, true, "File Size Box Not Found", stages);
+                                    //                return;
+                                    //            }
+                                    //            System.Threading.Thread.Sleep(500);
+                                    //            var filesized = fileSizeD.Patterns.Value.Pattern;
+                                    //            if (filesized.ToString() != "3.00")
+                                    //            {
+                                    //                System.Threading.Thread.Sleep(500);
+                                    //                filesized.SetValue("3.00");
+                                    //                Log(log, "D: File Size Box value set", System.Drawing.Color.Green);
+                                    //            }
+
+
+
+                                    //            var comboElement_D = prefWindow.FindFirstDescendant(cf =>
+                                    //cf.ByAutomationId("1148")
+                                    //  .And(cf.ByControlType(ControlType.ComboBox)));
+                                    //            if (comboElement_D == null)
+                                    //            {
+                                    //                Log(log, "D: Block Size Box Not Found", System.Drawing.Color.Red);
+                                    //                payhistory.burnintest = "Fail";
+                                    //                _userService.SQL_Upload(_pcbSno, _customer, true, "D: Block Size Box Not Found", stages);
+                                    //                return;
+                                    //            }
+                                    //            var combod = comboElement_D.AsComboBox();
+                                    //            combod.Focus();
+                                    //            System.Threading.Thread.Sleep(200);
+
+                                    //            Keyboard.Type("2");
+                                    //            System.Threading.Thread.Sleep(250);
+
+                                    //            Keyboard.Type("{ENTER}");
+
+                                    //            if (combod.Value.ToString() != "256")
+                                    //            {
+                                    //                Log(log, "D:Block Size value 256 Not selectd" + combod.Value.ToString(), Color.Red);
+                                    //                payhistory.burnintest = "Fail";
+                                    //                _userService.SQL_Upload(_pcbSno, _customer, true, "D:Block Size value 256 Not selectd", stages);
+                                    //                return;
+                                    //            }
+                                    //            Log(log, " D: Block Size value Selected" + combod.Value.ToString(), Color.Lime);
+                                    //            //break;
+                                    //        }
+                                    //        if (checkCDrive == "E:")
+                                    //        {
+                                    //            lstC.Select();
+                                    //            System.Threading.Thread.Sleep(500);
+                                    //            var checkE = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1223"))?.AsCheckBox();
+
+                                    //            if (checkE == null)
+                                    //            {
+                                    //                Log(log, "ListView E: not found .", Color.Red);
+                                    //                payhistory.burnintest = "Fail";
+                                    //                _userService.SQL_Upload(_pcbSno, _customer, true, "ListView E: not found .", stages);
+                                    //                return;
+                                    //            }
+                                    //            Log(log, "ListView E: found", Color.Lime);
+                                    //            checkE.IsChecked = true;
+                                    //            var fileSizeE = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1011"))?.AsTextBox();
+                                    //            System.Threading.Thread.Sleep(500);
+                                    //            if (fileSizeE == null)
+                                    //            {
+                                    //                Log(log, "E:File Size Box Not Found", System.Drawing.Color.Red);
+                                    //                payhistory.burnintest = "Fail";
+                                    //                _userService.SQL_Upload(_pcbSno, _customer, true, "E:File Size Box Not Found", stages);
+                                    //                return;
+                                    //            }
+
+                                    //            var filesizee = fileSizeE.Patterns.Value.Pattern;
+
+                                    //            if (filesizee.ToString() != "3.00")
+                                    //            {
+                                    //                System.Threading.Thread.Sleep(500);
+                                    //                filesizee.SetValue("3.00");
+                                    //                Log(log, "E: File Size Box value set", System.Drawing.Color.Green);
+                                    //            }
+
+
+                                    //            var comboElement_E = prefWindow.FindFirstDescendant(cf =>
+                                    //  cf.ByAutomationId("1148")
+                                    //    .And(cf.ByControlType(ControlType.ComboBox)));
+                                    //            if (comboElement_E == null)
+                                    //            {
+                                    //                Log(log, "E: Block Size Box Not Found", System.Drawing.Color.Red);
+                                    //                payhistory.burnintest = "Fail";
+                                    //                _userService.SQL_Upload(_pcbSno, _customer, true, "E: Block Size Box Not Found", stages);
+                                    //                return;
+                                    //            }
+
+
+                                    //            var comboe = comboElement_E.AsComboBox();
+                                    //            comboe.Focus();
+                                    //            System.Threading.Thread.Sleep(200);
+
+                                    //            Keyboard.Type("2");
+                                    //            System.Threading.Thread.Sleep(250);
+
+                                    //            Keyboard.Type("{ENTER}");
+
+                                    //            if (comboe.Value.ToString() != "256")
+                                    //            {
+                                    //                Log(log, "E Block Size value 256 Not selectd" + comboe.Value.ToString(), Color.Lime);
+                                    //                payhistory.burnintest = "Fail";
+                                    //                _userService.SQL_Upload(_pcbSno, _customer, true, "E Block Size value 256 Not selectd", stages);
+                                    //                return;
+                                    //            }
+                                    //            Log(log, " E: Block Size value Selected" + comboe.Value.ToString());
+
+                                    //            writeErrorMessage("Burn In Test 1st Stage Completed", "Message");
+
+                                    //            break;
+                                    //        }
+
+                                    //}
+
+                                    //var okButton = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1"))?.AsButton();
+
+                                    //if (okButton != null)
+                                    //{
+                                    //    okButton.Invoke();
+                                    //    Log(log, "Clicked OK button.");
+                                    //}
+                                    //else
+                                    //{
+                                    //    Log(log, "OK button not found (check AutomationId).");
+                                    //    payhistory.burnintest = "Fail";
+                                    //}
+
+                                    //                            var tabControl = prefWindow.FindFirstDescendant(cf =>
+                                    //   cf.ByControlType(ControlType.Tab))?.AsTab();
+
+                                    //                            var loggingTab = tabControl?.TabItems
+                                    //    .FirstOrDefault(t => t.Name == "Logging");
+
+                                    //                            if (loggingTab == null)
+                                    //                            {
+                                    //                                Log(log, "BurnInTest Preferences Logging Tab window not found.", Color.Red);
+                                    //                                payhistory.burnintest = "Fail";
+                                    //                                _userService.SQL_Upload(_pcbSno, _customer, true, "BurnInTest Preferences Logging Tab window not found.", stages);
+                                    //                                return;
+                                    //                            }
+                                    //                            loggingTab.Select();
+                                    //                            Thread.Sleep(1500);
+                                    //                            var allElements = prefWindow.FindAllDescendants();
+                                    //                            var chkTurn= prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1058"))?.AsCheckBox();
+                                    //                            if (chkTurn == null)
+                                    //                            {
+                                    //                                Log(log, "Turn on logging CheckBox not found.", Color.Red);
+                                    //                                payhistory.burnintest = "Fail";
+                                    //                                _userService.SQL_Upload(_pcbSno, _customer, true, "Turn on logging CheckBox not found.", stages);
+                                    //                                return;
+                                    //                            }
+                                    //                            if(!chkTurn.IsChecked.HasValue || !chkTurn.IsChecked.Value)
+                                    //                                chkTurn.IsChecked = true;
+
+                                    //                            var txtpathname = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1066"))?.AsTextBox();
+                                    //                            if (txtpathname == null)
+                                    //                            {
+                                    //                                Log(log, "Logging Tab Path Text Box not found.", Color.Red);
+                                    //                                payhistory.burnintest = "Fail";
+                                    //                                _userService.SQL_Upload(_pcbSno, _customer, true, "Logging Tab Path Text Box not found.", stages);
+                                    //                                return;
+                                    //                            }
+
+                                    //                            string logpath = @"C:/project/passmark/BurnInResultLog.log";
+                                    //                            var pathname = txtpathname.Patterns.Value.Pattern;
+                                    //                            if (pathname != null)
+                                    //                            {
+                                    //                                if (pathname.ToString() != logpath)
+                                    //                                {
+                                    //                                    pathname.SetValue(logpath);
+                                    //                                    Log(log, "Logging Tab Path Text Box value set.", Color.Green);
+                                    //                                }
+                                    //                                else
+                                    //                                {
+                                    //                                    Log(log, "Logging Tab Path Text Box value already set.", Color.Green);
+                                    //                                }
+                                    //                            }
+
+                                    //                            var singleLogCheck = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1064"))?.AsRadioButton();
+                                    //                            if (singleLogCheck == null)
+                                    //                            {
+                                    //                                Log(log, "Single Log Check not found.", Color.Red);
+                                    //                                payhistory.burnintest = "Fail";
+                                    //                                _userService.SQL_Upload(_pcbSno, _customer, true, "Single Log Check not found.", stages);
+                                    //                                return;
+                                    //                            }
+                                    //                            singleLogCheck.Click();
+
+                                    //                            var okButton2 = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1"))?.AsButton();
+                                    //                            if (okButton2 == null)
+                                    //                            {
+                                    //                                Log(log, "Logging ok button not found.", Color.Red);
+                                    //                                payhistory.burnintest = "Fail";
+                                    //                                _userService.SQL_Upload(_pcbSno, _customer, true, "Logging ok button not found.", stages);
+                                    //                                return;
+                                    //                            }
+                                    //                            okButton2.Invoke();
+
+
+                                    //                            var warningWindow = mainWindow.FindFirstDescendant(cf =>
+                                    //    cf.ByControlType(ControlType.Window).And(cf.ByName("Warning")))
+                                    //    ?.AsWindow();
+                                    //                            if (warningWindow != null)
+                                    //                            {
+                                    //                                var okBtn = warningWindow.FindFirstDescendant(cf =>
+                                    //                                    cf.ByControlType(ControlType.Button).And(cf.ByName("Yes")))
+                                    //                                    ?.AsButton();
+
+                                    //                                okBtn?.Invoke(); // or .Click()
+                                    //                            }
+                                    //                            configMenu?.Click();
+
+                                    //                            Log(log, "Configuration menu Clicked", System.Drawing.Color.Green);
+                                    //                            System.Threading.Thread.Sleep(2000);
+
+
+                                    //                            var testPrefnext = w.FindFirstDescendant(cf => cf.ByName("Test Selection && Duty Cycles..."));
+
+                                    //                            if (testPrefnext == null)
+                                    //                            {
+
+                                    //                                Log(log, "Test Selection & Duty Cycles not found-", System.Drawing.Color.Green);
+                                    //                                payhistory.burnintest = "Fail";
+
+                                    //                            }
+                                    //                            else
+                                    //                            {
+                                    //                                Log(log, "Test Selection & Duty Cycles found-", System.Drawing.Color.Green);
+                                    //                                testPrefnext.Click();
+                                    //                            }
+
+                                    //                            System.Threading.Thread.Sleep(2000);
+                                    //                            var prefWindowcycles = mainWindow.FindFirstDescendant(cf =>
+                                    //  cf.ByControlType(ControlType.Window)
+                                    //    .And(cf.ByName("Test selection and duty cycles")))
+                                    //  ?.AsWindow();
+
+                                    //                            if (prefWindowcycles == null)
+                                    //                            {
+                                    //                                //Console.WriteLine("Test selection and duty cycles window not found.");
+                                    //                                payhistory.burnintest = "Fail";
+                                    //                                return;
+                                    //                            }
+
+                                    //                            prefWindowcycles.Focus();
+                                    //                            //Console.WriteLine("Test selection and duty cycles window found.");
+
+                                    //                            var checkBoxes1 = prefWindowcycles.FindAllDescendants(cf => cf.ByControlType(ControlType.CheckBox));
+                                    //                            foreach (var cTest in checkBoxes1)
+                                    //                            {
+                                    //                                var checkboxnew = prefWindowcycles.FindFirstDescendant(cf => cf.ByAutomationId(cTest.AutomationId.ToString()))?.AsCheckBox();
+                                    //                                if (cTest.AutomationId != "1048")
+                                    //                                    checkboxnew.IsChecked = false;
+
+                                    //                                if (cTest.AutomationId == "1048")
+                                    //                                {
+                                    //                                    if (!checkboxnew.IsChecked.HasValue || !checkboxnew.IsChecked.Value)
+                                    //                                    {
+                                    //                                        checkboxnew.IsChecked = true;
+                                    //                                        Log(log, "Disk Checkbox checked successfully ✅", Color.Lime);
+                                    //                                    }
+                                    //                                    else
+                                    //                                    {
+                                    //                                        Log(log, "Disk Checkbox was already checked ✅", Color.Lime);
+                                    //                                    }
+
+                                    //                                }
+
+                                    //                            }
+
+                                    //                            Log(log, "Disk Checkbox checked completed", Color.Lime);
+                                    //                            //M.2
+                                    //                            var txtMinutes = prefWindowcycles.FindFirstDescendant(cf => cf.ByAutomationId("1074"))?.AsTextBox();
+                                    //                            var txtMinvalue = txtMinutes.Patterns.Value.Pattern;
+                                    //                            if (txtMinvalue != null)
+                                    //                            {
+                                    //                                if (txtMinvalue.ToString() != "0")
+                                    //                                    txtMinvalue.SetValue("0");
+                                    //                            }
+
+                                    //                            var txtCycles = prefWindowcycles.FindFirstDescendant(cf => cf.ByAutomationId("1087"))?.AsTextBox();
+                                    //                            var txtCylvalue = txtCycles.Patterns.Value.Pattern;
+                                    //                            if (txtCylvalue != null)
+                                    //                            {
+                                    //                                if (txtCylvalue.ToString() != "11") //Testing
+                                    //                                    txtCylvalue.SetValue("11");
+                                    //                            }
+
+                                    //                            var txtRow = prefWindowcycles.FindFirstDescendant(cf => cf.ByAutomationId("1067"))?.AsTextBox();
+                                    //                            var txtRowvalue = txtRow.Patterns.Value.Pattern;
+                                    //                            if (txtRowvalue != null)
+                                    //                            {
+                                    //                                if (txtRowvalue.ToString() != "50")
+                                    //                                    txtRowvalue.SetValue("50");
+                                    //                            }
+
+                                    //                            var txtDisk = prefWindowcycles.FindFirstDescendant(cf => cf.ByAutomationId("1061"))?.AsTextBox();
+                                    //                            var txtDiskvalue = txtDisk.Patterns.Value.Pattern;
+                                    //                            if (txtDiskvalue != null)
+                                    //                            {
+                                    //                                if (txtDiskvalue.ToString() != "100")
+                                    //                                    txtDiskvalue.SetValue("100");
+                                    //                            }
+
+                                    //                            //Testing
+                                    //                            var btnOk = prefWindowcycles.FindFirstDescendant(cf => cf.ByName("OK"))?.AsButton();
+                                    //                            if (btnOk != null)
+                                    //                                btnOk.Invoke();
+                                    //                            writeErrorMessage("Burn In Test 2nd Stage Completed", "Message");
+
+                                    //                            System.Threading.Thread.Sleep(2000);
+
+                                    //                            var TestMenu = mainWindow.FindFirstDescendant(cf => cf.ByName("Test"))?.AsMenuItem();
+                                    //                            if (TestMenu != null)
+                                    //                            {
+                                    //                                TestMenu.Invoke();
+                                    //                                System.Threading.Thread.Sleep(500);
+                                    //                                Log(log, "Test menu Clicked", System.Drawing.Color.Green);
+                                    //                            }
+                                    //                            var testStart = w.FindFirstDescendant(cf => cf.ByName("Start Test Run"));
+                                    //                            if (testStart != null)
+                                    //                            {
+                                    //                                testStart.Click();
+                                    //                                Log(log, "Start Test Run Found", System.Drawing.Color.Green);
+                                    //                            }
+
+
+
+                                    //                                var prefWindowcyclesWarning = mainWindow.FindFirstDescendant(cf =>
+                                    //cf.ByControlType(ControlType.Window)
+                                    // .And(cf.ByName("Getting ready to run Burn in tests")))
+                                    //?.AsWindow();
+
+                                    //                            if (prefWindowcyclesWarning == null)
+                                    //                            {
+                                    //                                //Console.WriteLine("warning Getting ready to run Burn in tests window not found.");
+                                    //                                payhistory.burnintest = "Fail";
+                                    //                                _userService.SQL_Upload(_pcbSno, _customer, true, "warning Getting ready to run Burn in tests window not found.", stages);
+                                    //                                return;
+                                    //                            }
+
+
+                                    //                            prefWindowcyclesWarning.Focus();
+                                    //                            // Testing
+                                    //                            var btnOkwarning = prefWindowcyclesWarning.FindFirstDescendant(cf => cf.ByName("OK"))?.AsButton();
+                                    //                            if (btnOkwarning != null)
+                                    //                                btnOkwarning.Invoke();
+
+
+                                    //                            Log(log, "Task Running", Color.Lime);
+
+                                    //                            Log(log,sleepingTime.ToString(),Color.Lime);
+                                    //                            Thread.Sleep(sleepingTime); //Testing
+
+
+
+                                    //crystal Report check - Start
+
+                                    Thread.Sleep(122000);
+                                var cryCheck = mainWindowCrystal
+        .FindFirstDescendant(cf => cf.ByName("Stop"))
+        ?.AsButton();
+
+                                if (cryCheck != null)
                                 {
-                                    Log(log, "Logging Tab Path Text Box value already set.", Color.Green);
-                                }
-                            }
-
-                            var singleLogCheck = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1064"))?.AsRadioButton();
-                            if (singleLogCheck == null)
-                            {
-                                Log(log, "Single Log Check not found.", Color.Red);
-                                payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "Single Log Check not found.", stages);
-                                return;
-                            }
-                            singleLogCheck.Click();
-
-                            var okButton2 = prefWindow.FindFirstDescendant(cf => cf.ByAutomationId("1"))?.AsButton();
-                            if (okButton2 == null)
-                            {
-                                Log(log, "Logging ok button not found.", Color.Red);
-                                payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "Logging ok button not found.", stages);
-                                return;
-                            }
-                            okButton2.Invoke();
-
-                          
-                            var warningWindow = mainWindow.FindFirstDescendant(cf =>
-    cf.ByControlType(ControlType.Window).And(cf.ByName("Warning")))
-    ?.AsWindow();
-                            if (warningWindow != null)
-                            {
-                                var okBtn = warningWindow.FindFirstDescendant(cf =>
-                                    cf.ByControlType(ControlType.Button).And(cf.ByName("Yes")))
-                                    ?.AsButton();
-
-                                okBtn?.Invoke(); // or .Click()
-                            }
-                            configMenu?.Click();
-
-                            Log(log, "Configuration menu Clicked", System.Drawing.Color.Green);
-                            System.Threading.Thread.Sleep(2000);
-
-
-                            var testPrefnext = w.FindFirstDescendant(cf => cf.ByName("Test Selection && Duty Cycles..."));
-
-                            if (testPrefnext == null)
-                            {
-
-                                Log(log, "Test Selection & Duty Cycles not found-", System.Drawing.Color.Green);
-                                payhistory.burnintest = "Fail";
-
-                            }
-                            else
-                            {
-                                Log(log, "Test Selection & Duty Cycles found-", System.Drawing.Color.Green);
-                                testPrefnext.Click();
-                            }
-
-                            System.Threading.Thread.Sleep(2000);
-                            var prefWindowcycles = mainWindow.FindFirstDescendant(cf =>
-  cf.ByControlType(ControlType.Window)
-    .And(cf.ByName("Test selection and duty cycles")))
-  ?.AsWindow();
-
-                            if (prefWindowcycles == null)
-                            {
-                                //Console.WriteLine("Test selection and duty cycles window not found.");
-                                payhistory.burnintest = "Fail";
-                                return;
-                            }
-
-                            prefWindowcycles.Focus();
-                            //Console.WriteLine("Test selection and duty cycles window found.");
-
-                            var checkBoxes1 = prefWindowcycles.FindAllDescendants(cf => cf.ByControlType(ControlType.CheckBox));
-                            foreach (var cTest in checkBoxes1)
-                            {
-                                var checkboxnew = prefWindowcycles.FindFirstDescendant(cf => cf.ByAutomationId(cTest.AutomationId.ToString()))?.AsCheckBox();
-                                if (cTest.AutomationId != "1048")
-                                    checkboxnew.IsChecked = false;
-
-                                if (cTest.AutomationId == "1048")
-                                {
-                                    if (!checkboxnew.IsChecked.HasValue || !checkboxnew.IsChecked.Value)
+                                    do
                                     {
-                                        checkboxnew.IsChecked = true;
-                                        Log(log, "Disk Checkbox checked successfully ✅", Color.Lime);
-                                    }
-                                    else
-                                    {
-                                        Log(log, "Disk Checkbox was already checked ✅", Color.Lime);
-                                    }
-
+                                        Thread.Sleep(500);
+                                        Log(log, " D:Waiting for Crystal Test to complete... --" + cryCheck.Name,Color.Lime);
+                                    } while (cryCheck.Name != "All");
                                 }
-
-                            }
-
-                            Log(log, "Disk Checkbox checked completed", Color.Lime);
-                            //M.2
-                            var txtMinutes = prefWindowcycles.FindFirstDescendant(cf => cf.ByAutomationId("1074"))?.AsTextBox();
-                            var txtMinvalue = txtMinutes.Patterns.Value.Pattern;
-                            if (txtMinvalue != null)
-                            {
-                                if (txtMinvalue.ToString() != "0")
-                                    txtMinvalue.SetValue("0");
-                            }
-
-                            var txtCycles = prefWindowcycles.FindFirstDescendant(cf => cf.ByAutomationId("1087"))?.AsTextBox();
-                            var txtCylvalue = txtCycles.Patterns.Value.Pattern;
-                            if (txtCylvalue != null)
-                            {
-                                if (txtCylvalue.ToString() != "11") //Testing
-                                    txtCylvalue.SetValue("11");
-                            }
-
-                            var txtRow = prefWindowcycles.FindFirstDescendant(cf => cf.ByAutomationId("1067"))?.AsTextBox();
-                            var txtRowvalue = txtRow.Patterns.Value.Pattern;
-                            if (txtRowvalue != null)
-                            {
-                                if (txtRowvalue.ToString() != "50")
-                                    txtRowvalue.SetValue("50");
-                            }
-
-                            var txtDisk = prefWindowcycles.FindFirstDescendant(cf => cf.ByAutomationId("1061"))?.AsTextBox();
-                            var txtDiskvalue = txtDisk.Patterns.Value.Pattern;
-                            if (txtDiskvalue != null)
-                            {
-                                if (txtDiskvalue.ToString() != "100")
-                                    txtDiskvalue.SetValue("100");
-                            }
-
-                            //Testing
-                            var btnOk = prefWindowcycles.FindFirstDescendant(cf => cf.ByName("OK"))?.AsButton();
-                            if (btnOk != null)
-                                btnOk.Invoke();
-                            writeErrorMessage("Burn In Test 2nd Stage Completed", "Message");
-
-                            System.Threading.Thread.Sleep(2000);
-
-                            var TestMenu = mainWindow.FindFirstDescendant(cf => cf.ByName("Test"))?.AsMenuItem();
-                            if (TestMenu != null)
-                            {
-                                TestMenu.Invoke();
-                                System.Threading.Thread.Sleep(500);
-                                Log(log, "Test menu Clicked", System.Drawing.Color.Green);
-                            }
-                            var testStart = w.FindFirstDescendant(cf => cf.ByName("Start Test Run"));
-                            if (testStart != null)
-                            {
-                                testStart.Click();
-                                Log(log, "Start Test Run Found", System.Drawing.Color.Green);
-                            }
-
-                            ////Testing
-                            //var elements = mainWindow.FindAllDescendants();
-
-                            //foreach (var el in elements)
-                            //{
-                            //    string name = SafeProp(() => el.Properties.Name.Value);
-                            //    string automationId = SafeProp(() => el.Properties.AutomationId.Value);
-                            //    string className = SafeProp(() => el.Properties.ClassName.Value);
-                            //    string controlType = el.ControlType.ToString();
-                            //    string text = GetElementText(el);
-
-                            //    Log(log, $"---- Element ----", Color.Lime);
-                            //    Log(log, $"Name: {name}", Color.Lime);
-                            //    Log(log, $"AutomationId: {automationId}", Color.Lime);
-                            //    Log(log, $"ClassName: {className}", Color.Lime);
-                            //    Log(log, $"ControlType: {controlType}", Color.Lime);
-                            //    Log(log, $"Label Value (Text): {text}", Color.Lime);
-                            //    //Thread.Sleep(500);
-                            //    //}
-                            //}
-                           
-
-                                var prefWindowcyclesWarning = mainWindow.FindFirstDescendant(cf =>
-cf.ByControlType(ControlType.Window)
- .And(cf.ByName("Getting ready to run Burn in tests")))
-?.AsWindow();
-
-                            if (prefWindowcyclesWarning == null)
-                            {
-                                //Console.WriteLine("warning Getting ready to run Burn in tests window not found.");
-                                payhistory.burnintest = "Fail";
-                                _userService.SQL_Upload(_pcbSno, _customer, true, "warning Getting ready to run Burn in tests window not found.", stages);
-                                return;
-                            }
-
-
-                            prefWindowcyclesWarning.Focus();
-                            // Testing
-                            var btnOkwarning = prefWindowcyclesWarning.FindFirstDescendant(cf => cf.ByName("OK"))?.AsButton();
-                            if (btnOkwarning != null)
-                                btnOkwarning.Invoke();
-
-
-                            Log(log, "Task Running", Color.Lime);
-                           // sleepingTime = Convert.ToInt32(ConfigurationManager.AppSettings["Sleep"].ToString());
-                            //if (sleepingTime == null)
-                            //    sleepingTime = 210000;
-                            Log(log,sleepingTime.ToString(),Color.Lime);
-                            Thread.Sleep(sleepingTime); //Testing
-                           // Thread.Sleep(50000);
-                            //                        var windows = desktop.FindAllChildren(cf => cf.ByControlType(ControlType.Window));
-
-                            //                        foreach (var win in windows)
-                            //                        {
-                            //                            Log(log, "==================================");
-                            //                            Log(log, $"Window Name       : {win.Name}");
-                            //                            string automationId = win.Properties.AutomationId.IsSupported
-                            //? win.Properties.AutomationId.Value
-                            //: "(Not Supported)";
-
-                            //                            Log(log, $"AutomationId : {automationId}");
-                            //                            // Console.WriteLine($"AutomationId : {win.AutomationId ?? "(Not Available)"}");
-                            //                            //Console.WriteLine($"ClassName         : {win.ClassName}");
-                            //                            //Console.WriteLine($"ProcessId         : {win.Properties.ProcessId.Value}");
-                            //                        }
-
-
-                            //                        var childWindows = mainWindow.FindAllChildren(cf =>
-                            //cf.ByControlType(ControlType.Window));
-
-                            //                        foreach (var win in childWindows)
-                            //                        {
-                            //                            Console.WriteLine("-------- Child Window --------");
-                            //                            Log(log, "==================================");
-                            //                            Log(log, $"Window Name       : {win.Name}");
-                            //                            string automationId = win.Properties.AutomationId.IsSupported
-                            //? win.Properties.AutomationId.Value
-                            //: "(Not Supported)";
-
-                            //                            Log(log, $"AutomationId : {automationId}");
-                            //                        }
-
-                            //crystal Report check - Start
-                            var cryCheck = mainWindowCrystal
-.FindFirstDescendant(cf => cf.ByName("Stop"))
-?.AsButton();
-
-                            if (cryCheck != null)
-                            {
-                                do
-                                {
-                                    Thread.Sleep(500);
-                                     Log(log, " D:Waiting for Crystal Test to complete... --" + cryCheck.Name);
-                                } while (cryCheck.Name != "All");
-                            }
-                            Log(log, " D:Crystal Test to completed", Color.Lime);
-                            var validIds = new HashSet<string>
+                                Log(log, " D:Crystal Test to completed", Color.Lime);
+                                var validIds = new HashSet<string>
 {
     "1009","1010","1011","1012",
     "1014","1015","1016","1017"
 };
 
-                            int count = 0;
+                                int count = 0;
 
-                            foreach (var el in mainWindowCrystal.FindAllDescendants())
-                            {
-                                string automationId = SafeGet(() => el.AutomationId);
-
-                                if (!validIds.Contains(automationId))
-                                    continue;
-
-                                string name = SafeGet(() => el.Name);
-                                string controlType = SafeGet(() => el.ControlType.ToString());
-
-                                var element = mainWindowCrystal.FindFirstDescendant(cf =>
-                                    cf.ByAutomationId(automationId));
-
-                                if (element == null)
-                                    continue;
-
-                                string readValue = getcrystalvalue(element);
-                                if (automationId == "1009")
-                                    payhistory.read_one = readValue;
-                                else if (automationId == "1010")
-                                    payhistory.read_two = readValue;
-                                else if (automationId == "1011")
-                                    payhistory.read_three = readValue;
-                                else if (automationId == "1012")
-                                    payhistory.read_four = readValue;
-                                else if (automationId == "1014")
-                                    payhistory.write_one = readValue;
-                                else if (automationId == "1015")
-                                    payhistory.write_two = readValue;
-                                else if (automationId == "1016")
-                                    payhistory.write_three = readValue;
-                                else if (automationId == "1017")
-                                    payhistory.write_four = readValue;
-                                // ❌ FAIL case
-                             if (readValue == "0")
+                                foreach (var el in mainWindowCrystal.FindAllDescendants())
                                 {
-                                    _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
-                                    Log(log, "Crystal DiskMark Fail " + readValue, Color.Red);
-                                    writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
-                                    payhistory.CrystalReport = "Fail";
-                                    this.Invoke(new Action(() =>
+                                    string automationId = SafeGet(() => el.AutomationId);
+
+                                    if (!validIds.Contains(automationId))
+                                        continue;
+
+                                    string name = SafeGet(() => el.Name);
+                                    string controlType = SafeGet(() => el.ControlType.ToString());
+
+                                    var element = mainWindowCrystal.FindFirstDescendant(cf =>
+                                        cf.ByAutomationId(automationId));
+
+                                    if (element == null)
+                                        continue;
+
+                                    string readValue = getcrystalvalue(element);
+                                    if (automationId == "1009")
+                                        payhistory.read_one = readValue;
+                                    else if (automationId == "1010")
+                                        payhistory.read_two = readValue;
+                                    else if (automationId == "1011")
+                                        payhistory.read_three = readValue;
+                                    else if (automationId == "1012")
+                                        payhistory.read_four = readValue;
+                                    else if (automationId == "1014")
+                                        payhistory.write_one = readValue;
+                                    else if (automationId == "1015")
+                                        payhistory.write_two = readValue;
+                                    else if (automationId == "1016")
+                                        payhistory.write_three = readValue;
+                                    else if (automationId == "1017")
+                                        payhistory.write_four = readValue;
+                                    // ❌ FAIL case
+                                    if (readValue == "0")
                                     {
-                                        ppfrm.AddText("ERROR: ", Color.Red, true);
-                                        ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
-                                        ppfrm.ShowDialog();
-                                        ppfrm.Focus();
-                                    }));
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
+                                        Log(log, "Crystal DiskMark Fail " + readValue, Color.Red);
+                                        writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
+                                        payhistory.CrystalReport = "Fail";
+                                        this.Invoke(new Action(() =>
+                                        {
+                                            ppfrm.AddText("ERROR: ", Color.Red, true);
+                                            ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
+                                            ppfrm.ShowDialog();
+                                            ppfrm.Focus();
+                                          
+                                        }));
+                                        if (burnInProcess != null && !burnInProcess.HasExited)
+                                        {
+                                            try
+                                            {
+                                                burnInProcess.CloseMainWindow();
 
-                                    return;
-                                }
-                                if ((automationId == "1009" || automationId == "1014") && Convert.ToDecimal(readValue) < 1000)
-                                {
-                                    _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
-                                    Log(log, "Crystal DiskMark Fail " + readValue, Color.Red);
-                                    writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
-                                    payhistory.CrystalReport = "Fail";
-                                    this.Invoke(new Action(() =>
+                                                if (!burnInProcess.WaitForExit(5000))
+                                                {
+                                                    burnInProcess.Kill();
+                                                }
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Log(log, "Error closing burn-in: " + ex.Message, Color.Red);
+                                            }
+                                        }
+
+                                        return;
+                                    }
+                                    if ((automationId == "1009" || automationId == "1014") && Convert.ToDecimal(readValue) < 1000)
                                     {
-                                        ppfrm.AddText("ERROR: ", Color.Red, true);
-                                        ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
-                                        ppfrm.ShowDialog();
-                                        ppfrm.Focus();
-                                    }));
-                                    return;
-                                }
-                                count++;
+                                        _userService.SQL_Upload(_pcbSno, _customer, true, "D :Crystal DiskMark Fail - Read", stages);
+                                        Log(log, "Crystal DiskMark Fail " + readValue, Color.Red);
+                                        writeErrorMessage("D :Crystal DiskMark Fail - Read", "Error");
+                                        payhistory.CrystalReport = "Fail";
+                                        this.Invoke(new Action(() =>
+                                        {
+                                            ppfrm.AddText("ERROR: ", Color.Red, true);
+                                            ppfrm.AddText("D: Crystal DiskMark Fail - Read!", Color.Black);
+                                            ppfrm.ShowDialog();
+                                            ppfrm.Focus();
+                                         
+                                            
+                                        }));
+                                        if (burnInProcess != null && !burnInProcess.HasExited)
+                                        {
+                                            try
+                                            {
+                                                burnInProcess.CloseMainWindow();
 
-                                // ✅ PASS case (all 8 values processed)
-                                if (count == validIds.Count)
-                                {
-                                    Log(log, "Crystal DiskMark Pass - " + readValue, Color.Lime);
+                                                if (!burnInProcess.WaitForExit(5000))
+                                                {
+                                                    burnInProcess.Kill();
+                                                }
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Log(log, "Error closing burn-in: " + ex.Message, Color.Red);
+                                            }
+                                        }
+                                        return;
+                                    }
+                                    count++;
 
-                                    this.BeginInvoke(new Action(() =>
+                                    // ✅ PASS case (all 8 values processed)
+                                    if (count == validIds.Count)
                                     {
-                                        var popup = new BlinkPopupForm(9000);
-                                        popup.SetMessage("Crystal DiskMark Pass - Read");
-                                        popup.Show();
-                                        popup.Activate();
-                                    }));
-                                    payhistory.CrystalReport = "Pass";
-                                    Log(log, "Crystal DiskMark Pass", Color.Green);
-                                    break;
+                                        Log(log, "Crystal DiskMark Pass - " + readValue, Color.Lime);
+
+                                        this.BeginInvoke(new Action(() =>
+                                        {
+                                            var popup = new BlinkPopupForm(9000);
+                                            popup.SetMessage("Crystal DiskMark Pass");
+                                            popup.Show();
+                                            popup.Activate();
+                                           
+                                        }));
+                                        payhistory.CrystalReport = "Pass";
+                                        Log(log, "Crystal DiskMark Pass", Color.Green);
+                                        break;
+                                    }
+
+                                    Log(log, $"Type: {controlType} | Name: {name} | AutomationId: {automationId}", Color.Lime);
                                 }
-
-                                Log(log, $"Type: {controlType} | Name: {name} | AutomationId: {automationId}",Color.Lime);
-                            }
-
-                            //Crystal Report check - end
-
-                            //BurmInTest Result Check
-
-                            string resultname = string.Empty;
-                            Log(log,"Burin In Test Wait", Color.Lime);
-                            do
-                            {
-                                var burnintestresult = mainWindow.FindFirstDescendant(cf =>
-         cf.ByControlType(ControlType.Window)
-           .And(cf.ByName("BurnInTest test result")));
-
-                                resultname = burnintestresult == null ? string.Empty : burnintestresult.Name.ToString();
-
-                                Thread.Sleep(1000);
-                                string name = burnintestresult == null ? "N/A" : burnintestresult.Name;
-                                Log(log, "Waiting for Burn In Test to complete... " + name, Color.Lime);
-
-                            } while (resultname == string.Empty);
-                            Thread.Sleep(1500);
-
-
-
-                            //Testing
-
-                            //if (eStatus)
-                            //{
-                            //    // Thread.Sleep(100000);
-                            //    var ftxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
-                            //    if (ftxt_1 != null)
-                            //    {
-                            //        var fval_1 = ftxt_1.ToString().Split('.');
-                            //        if (fval_1.Length > 0)
-                            //        {
-                            //            if (fval_1[0].Length > 3)
-                            //            {
-                            //                Log(log, "Crystal DiskMark Pass -Read");
-                            //                MessageBox.Show("Crystal DiskMark Pass -Read", "Message");
-                            //            }
-                            //            else
-                            //            {
-                            //                Log(log, "Crystal DiskMark Fail - Read");
-                            //                MessageBox.Show(" E :Crystal DiskMark Fail - Read", "Error");
-                            //                writeErrorMessage("E :Crystal DiskMark Fail - Read", "Error");
-                            //            }
-                            //        }
-
-                            //    }
-                            //    Log(log, "First Text Box-" + ftxt_1.Name);
-
-                            //    var Stxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
-                            //    if (Stxt_1 != null)
-                            //    {
-                            //        var Sval_1 = Stxt_1.ToString().Split('.');
-                            //        if (Sval_1.Length > 0)
-                            //        {
-                            //            if (Sval_1[0].Length > 3)
-                            //            {
-                            //                Log(log, "Crystal DiskMark Pass -write");
-                            //                MessageBox.Show("Crystal DiskMark Pass -write", "Message");
-                            //            }
-                            //            else
-                            //            {
-                            //                Log(log, "Crystal DiskMark Fail - write");
-                            //                MessageBox.Show("E:Crystal DiskMark Fail - write", "Error");
-                            //                writeErrorMessage("E :Crystal DiskMark Fail - write", "Error");
-                            //            }
-                            //        }
-
-                            //    }
-                            //    Log(log, "Second Text Box-" + Stxt_1.Name);
-                            //}
-
-                            //first Crystal Report stage
-
-
-
-                            //                            var Crystalpath = ConfigurationManager.AppSettings["Crystal"];
-                            //                            if (!File.Exists(Crystalpath))
-                            //                            { 
-                            //                                Log(log, "Crystal DiskMark Not Found");
-                            //                                return;
-                            //                            }
-                            //                            app = LaunchWithAdmin(Crystalpath);
-                            //                            System.Threading.Thread.Sleep(2000);
-
-                            //                            var mainWindowCrystal = desktop.FindFirstDescendant(cf =>
-                            //cf.ByControlType(ControlType.Window)
-                            //.And(cf.ByName("CrystalDiskMark 8.0.1 x86 [Admin]")))
-                            //?.AsWindow();
-
-                            //                            if (mainWindowCrystal == null)
-                            //                            {
-                            //                                Log(log, "CrystalDiskMark Window Not Found");
-                            //                                return;
-                            //                            }
-                            //                            mainWindowCrystal.Focus();
-
-                            //                            //Comobox value
-                            //                            System.Threading.Thread.Sleep(1000);
-                            //                            string comboAutomationId = "1027";
-
-                            //                            var comboElement = mainWindowCrystal.FindFirstDescendant(cf =>
-                            //                        cf.ByAutomationId(comboAutomationId)
-                            //                          .And(cf.ByControlType(ControlType.ComboBox)));
-                            //                            if (comboElement == null)
-                            //                            {
-                            //                                Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId}' not found.");
-                            //                                return;
-                            //                            }
-
-
-                            //                            var combo = comboElement.AsComboBox();
-                            //                            combo?.Expand();
-                            //                            Thread.Sleep(500); // allow items to appear
-
-                            //                            Log(log, $"✅ ComboBox Found: {comboAutomationId}");
-                            //                            Log(log, "----------------------------------------------------");
-
-                            //                            // 🔹 List all dropdown values
-                            //                            if (combo?.Items != null && combo.Items.Length > 0)
-                            //                            {
-                            //                                Log(log, "Available Items:");
-                            //                                foreach (var item in combo.Items)
-                            //                                {
-                            //                                    if (item.Name == "D: 18% (42/232GiB)" || item.Name.Contains("D:"))
-                            //                                    {
-                            //                                        combo.Select(item.Name);
-                            //                                        Log(log, "  • " + item.Text);
-                            //                                        break;
-                            //                                    }
-                            //                                }
-                            //                                if (combo.Items.Length >= 3)
-                            //                                    PartitionCount = 1;
-                            //                            }
-                            //                            else
-                            //                            {
-                            //                                Log(log, "⚠️ No items found or combo not expandable.");
-                            //                            }
-
-                            //                            // 🔹 Show currently selected item
-                            //                            if (combo?.SelectedItem != null)
-                            //                                Log(log, $"Selected: {combo.SelectedItem.Text}");
-                            //                            else
-                            //                                Log(log, "No item currently selected.");
-
-                            //                            combo?.Collapse();
-
-                            //                            //All Ok Button
-                            //                            var btnAll = mainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
-                            //                            if (btnAll == null)
-                            //                            {
-                            //                                Log(log, "Button All Not Found");
-                            //                                return;
-                            //                            }
-                            //                            btnAll.Invoke();
-
-                            //                            Log(log, "D: crystal Report Started.");
-
-                            //                            Application appnew = null;
-
-                            //                            if (PartitionCount > 0 )
-                            //                            {
-                            //                                Log(log, "Check Next crystal Report Entry.");
-                            //                                appnew = LaunchWithAdmin(Crystalpath);
-                            //                                string comboAutomationId_1 = "1027";
-                            //                                System.Threading.Thread.Sleep(2000);
-                            //                                var emainWindowCrystal = desktop.FindFirstDescendant(cf =>
-                            //cf.ByControlType(ControlType.Window)
-                            //.And(cf.ByName("CrystalDiskMark 8.0.1 x86 [Admin]")))
-                            //?.AsWindow();
-                            //                                if (emainWindowCrystal == null)
-                            //                                {
-                            //                                    Log(log, $"❌ Second window not found.");
-                            //                                    return;
-                            //                                }
-                            //                                emainWindowCrystal.Focus();
-
-                            //                                var comboElement_1 = emainWindowCrystal.FindFirstDescendant(cf =>
-                            //                            cf.ByAutomationId(comboAutomationId_1)
-                            //                              .And(cf.ByControlType(ControlType.ComboBox)));
-                            //                                if (comboElement_1 == null)
-                            //                                {
-                            //                                    Log(log, $"❌ ComboBox with AutomationId '{comboAutomationId_1}' not found.");
-                            //                                    appnew.Close();
-                            //                                    return;
-                            //                                }
-
-
-                            //                                var combo1 = comboElement_1.AsComboBox();
-
-                            //                                combo1?.Expand();
-                            //                                //Thread.Sleep(300); // allow items to appear
-
-                            //                                //Log(log, $"✅ ComboBox Found: {comboAutomationId_1}");
-                            //                                ////Log(log, "----------------------------------------------------");
-
-                            //                                //Log(log,"Second list --" + combo1.Items.Count().ToString());
-                            //                                Thread.Sleep(300);
-                            //                                // 🔹 List all dropdown values
-                            //                                if (combo1?.Items != null && combo1.Items.Length > 0)
-                            //                                {
-                            //                                    bool eStatus = false;
-                            //                                    foreach (var item in combo1.Items)
-                            //                                    {
-                            //                                        Log(log, "Available Items:" + item.Name);
-                            //                                        if (item.Name.Contains("E:"))
-                            //                                        {
-                            //                                            Log(log, "Found E: Drive ");
-                            //                                            combo1.Select(item.Name);
-                            //                                            Log(log, "  • " + item.Text);
-                            //                                            eStatus = true;
-                            //                                            break;
-                            //                                        }
-                            //                                    }
-
-                            //                                    if(!eStatus)
-                            //                                    {
-                            //                                        Log(log, "E: Drive found.");
-                            //                                        appnew.Close(true);
-                            //                                        return;
-                            //                                    }
-
-                            //                                    if (combo1.Items.Length > 4)
-                            //                                        PartitionCount = 2;
-                            //                                }
-                            //                                else
-                            //                                {
-                            //                                    Log(log, "⚠️ No items found or combo not expandable.");
-                            //                                }
-
-                            //                                // 🔹 Show currently selected item
-                            //                                if (combo1?.SelectedItem != null)
-                            //                                    Log(log, $"Selected: {combo1.SelectedItem.Text}");
-                            //                                else
-                            //                                    Log(log, "No item currently selected.");
-
-
-                            //                                combo1?.Collapse();
-
-
-
-                            //                                //All Ok Button
-                            //                                var btnAll_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByName("All"))?.AsButton();
-                            //                                if (btnAll_1 == null)
-                            //                                {
-                            //                                    Log(log, "Button All Not Found");
-                            //                                    return;
-                            //                                }
-                            //                                btnAll_1.Invoke();
-
-                            //                                Thread.Sleep(100000);
-                            //                                var ftxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
-                            //                                if (ftxt_1 != null)
-                            //                                {
-                            //                                    var fval_1 = ftxt_1.ToString().Split('.');
-                            //                                    if (fval_1.Length > 0)
-                            //                                    {
-                            //                                        if (fval_1[0].Length > 3)
-                            //                                            Log(log, "Crystal DiskMark Pass -Read");
-                            //                                        else
-                            //                                            Log(log, "Crystal DiskMark Fail - Read");
-                            //                                    }
-
-                            //                                }
-                            //                                Log(log, "First Text Box-" + ftxt_1.Name);
-
-                            //                                var Stxt_1 = emainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
-                            //                                if (Stxt_1 != null)
-                            //                                {
-                            //                                    var Sval_1 = Stxt_1.ToString().Split('.');
-                            //                                    if (Sval_1.Length > 0)
-                            //                                    {
-                            //                                        if (Sval_1[0].Length > 3)
-                            //                                            Log(log, "Crystal DiskMark Pass -write");
-                            //                                        else
-                            //                                            Log(log, "Crystal DiskMark Fail - write");
-                            //                                    }
-
-                            //                                }
-                            //                                Log(log, "Second Text Box-" + Stxt_1.Name);
-
-                            //                                //first Crystal Report stage
-
-                            //                                var ftxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1009"));
-                            //                                if (ftxt != null)
-                            //                                {
-                            //                                    var fval = ftxt.ToString().Split('.');
-                            //                                    if (fval.Length > 0)
-                            //                                    {
-                            //                                        if (fval[0].Length > 3)
-                            //                                            Log(log, "Crystal DiskMark Pass -Read");
-                            //                                        else
-                            //                                            Log(log, "Crystal DiskMark Fail - Read");
-                            //                                    }
-
-                            //                                }
-                            //                                Log(log, "First Text Box-" + ftxt.Name);
-
-                            //                                var Stxt = mainWindowCrystal.FindFirstDescendant(cf => cf.ByAutomationId("1014"));
-                            //                                if (Stxt != null)
-                            //                                {
-                            //                                    var Sval = Stxt.ToString().Split('.');
-                            //                                    if (Sval.Length > 0)
-                            //                                    {
-                            //                                        if (Sval[0].Length > 3)
-                            //                                            Log(log, "Crystal DiskMark Pass -write");
-                            //                                        else
-                            //                                            Log(log, "Crystal DiskMark Fail - write");
-                            //                                    }
-
-                            //                                }
-                            //                                Log(log, "Second Text Box-" + Stxt.Name);
-
-                            // appnew.Close();
-                            //    }
-
-                            //Testing
-                            string logFilePath = ConfigurationManager.AppSettings["BurnInPath"].ToString();
-                            if (!Directory.Exists(logFilePath))
-                            {
-                                Directory.CreateDirectory(logFilePath);
-                            }
-                            string filename = "BurnInResultLog";
-                            //string timestamp = DateTime.Now.ToString("ddMMyy_HHmmss");
-                            //string newFileName = $"{filename}_{timestamp}";
-                            //string fullFileName = newFileName + ".txt";
+                                Thread.Sleep(2000);
+                     
+                                }
                             
-                            string fullPath = Path.Combine(logFilePath, filename + ".log");
-                            Log(log, fullPath, Color.Lime);
+            });
+                        await Task.WhenAll(burnInTask, moniterTask);
+
+                        //Crystal Report check - end
+
+                        //BurmInTest Result Check
+
+                        //                   string resultname = string.Empty;
+                        //                   Log(log, "Burin In Test Wait", Color.Lime);
+                        //                   do
+                        //                   {
+                        //                       var burnintestresult = mainWindow.FindFirstDescendant(cf =>
+                        //cf.ByControlType(ControlType.Window)
+                        //  .And(cf.ByName("BurnInTest test result")));
+
+                        //                       resultname = burnintestresult == null ? string.Empty : burnintestresult.Name.ToString();
+
+                        //                       Thread.Sleep(1000);
+                        //                       string name = burnintestresult == null ? "N/A" : burnintestresult.Name;
+                        //                       Log(log, "Waiting for Burn In Test to complete... " + name, Color.Lime);
+
+                        //                   } while (resultname == string.Empty);
+                        //                   Thread.Sleep(1500);
 
 
 
-                            if (!File.Exists(fullPath))
-                            {
-                                Log(log, "Log file not found: " + fullPath);
-                                return;
-                            }
 
-                            // Get the test run status
-                            string statusFullLine = GetTestRunStatus(fullPath);
+                        //Testing
+                        //string logFilePath = ConfigurationManager.AppSettings["BurnInPath"].ToString();
+                        //if (!Directory.Exists(logFile))
+                        //{
+                        //    Directory.CreateDirectory(logFile);
+                        //}
+                        //string filename = "BurnInResultLog";
+
+                        //string fullPath = Path.Combine(logFile, filename + ".log");
+                        //Log(log, fullPath, Color.Lime);
+
+                        //if (!File.Exists(fullPath))
+                        //{
+                        //    Log(log, "Log file not found: " + fullPath,Color.Lime);
+                        //    return;
+                        //}
+
+                        // Get the test run status
+                        Thread.Sleep(5000);
+                        string statusFullLine = GetTestRunStatus(logFile);
                             Log(log,"Burn In Test: " + statusFullLine,Color.Lime);
 
                             // Optional: extract only PASSED/FAIL
@@ -2187,7 +2003,7 @@ cf.ByControlType(ControlType.Window)
 
 
 
-                            break;
+                          //  break;
                         }
                         catch (Exception ex)
                         {
@@ -2212,12 +2028,12 @@ cf.ByControlType(ControlType.Window)
                                 frmFailLink.AddText("Error:", Color.Red, true);
                                 frmFailLink.AddText(ex.Message.ToString(), Color.Green);
                             });
-                            break;
+                           // break;
                         }
                         finally
                         {
 
-                            mainWindow.Close();
+                            //mainWindow.Close();
                             //app.Dispose();
                             if (payhistory.CrystalReport == "Fail")
                             {
@@ -2258,7 +2074,7 @@ cf.ByControlType(ControlType.Window)
                     }
 
                 }
-            }
+ 
 
 
             catch (Exception ex)
@@ -2616,7 +2432,8 @@ cf.ByControlType(ControlType.Window)
                                 {
                                     writeErrorMessage("Serial No-" + serialno, "getSerialNo");
                                     _productTypeId = 1;
-                                    //serialno = "ESP3C1Q06CNA01656"; //Testing
+                                   // serialno = "ESP3D1Q10CNA15821"; //Testing
+                                    
                                     _fgDetails =await _userService.GetFgDetails(_productTypeId, serialno);
                                     if (_fgDetails == null)
                                     {
@@ -2626,18 +2443,23 @@ cf.ByControlType(ControlType.Window)
                                    
                                     if (_fgDetails != null)
                                     {
-                                        if(_fgDetails.error != "false")
-                                        {
-                                            Log(log, "Error fetching Network Related Issue: " + _fgDetails.error, Color.Red);
-                                            checkSN[false] = 0;
-                                            SafeUI(() => txtCustomer.Clear());
-                                            SafeUI(() => txtCustomer.Focus());
-                                            return _servies;
-                                        }
+                                        //Testing
+                                        //if(_fgDetails.error != "false")
+                                        //{
+                                        //    Log(log, "Error fetching Network Related Issue: " + _fgDetails.error, Color.Red);
+                                        //    checkSN[false] = 0;
+                                        //    SafeUI(() => txtCustomer.Clear());
+                                        //    SafeUI(() => txtCustomer.Focus());
+                                        //    return _servies;
+                                        //}
                                         // _customer = _fgDetails.Customer;
-                                        _customer = serialno;
-                                        _pcbSno = _fgDetails.ProductType;
-                                        _fgName = _fgDetails.FgName;
+                                        //Testing
+                                        //_customer = serialno;
+                                        //_pcbSno = _fgDetails.ProductType;
+                                        //_fgName = _fgDetails.FgName;
+                                        _customer = "M.2";
+                                        _pcbSno = "ECH3ESN00077261215821";
+                                        _fgName = "ECH3ESN00077";
                                         UpdateUI(_fgName, _pcbSno, _customer);
                                         payhistory.FgNumber = _fgName;
                                         payhistory.PCBAID = _pcbSno;
